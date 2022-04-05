@@ -13,7 +13,7 @@ classdef MyRobot < handle
         % Protocol version
         PROTOCOL_VERSION            = 1.0;          % See which protocol version is used in the Dynamixel
 
-        motor_ids = [2 1 10 0];
+        motor_ids = [0 1 2 3];
         
         BAUDRATE                    = 1000000;
         DEVICENAME                  = 'COM3';       % Check which port is being used on your controller
@@ -44,36 +44,38 @@ classdef MyRobot < handle
         joint_pos = zeros(4,4);
         
         draw_robot_flag = 0;
-        rbt = rigidBodyTree;
+        use_smooth_speed_flag = 0;
+        rbt = 0;
         
-        joint_limits = [-180 180; -160 0; -80 80; -80 80];
+        joint_limits = [-150 150; -180 0; -100 100; -100 100];
         
         ik = 0;
         ik_weights = [0.25 0.25 0.25 1 1 1];
-        joint_offsets = [171 150+90 150 150];
+        joint_offsets = [171-5 150+90 150 150];
         joint_angle_error = [0 0 0 0];
+        init_status = 0;
+        movement_history = [];
+        motor_speed = 0;
+        motor_torque = 0;
    
     end
     methods
         function self = MyRobot()
             if ~libisloaded(self.lib_name)
-                [notfound, warnings] = loadlibrary(self.lib_name, 'dynamixel_sdk.h', 'addheader', 'port_handler.h', 'addheader', 'packet_handler.h');
+                [~, ~] = loadlibrary(self.lib_name, 'dynamixel_sdk.h', 'addheader', 'port_handler.h', 'addheader', 'packet_handler.h');
             end
             self.port_num = portHandler(self.DEVICENAME);
             packetHandler();
-            % Open port
             if (openPort(self.port_num))
                 fprintf('Succeeded to open the port!\n');
             else
                 fprintf('Failed to open the port!\n');
-                % Close port
                 closePort(self.port_num);
                 unloadlibrary(lib_name);
 
 
             end
             
-            % Set port baudrate
             if (setBaudRate(self.port_num, self.BAUDRATE))
                 fprintf('Succeeded to change the baudrate!\n');
             else
@@ -82,26 +84,36 @@ classdef MyRobot < handle
                 input('Press any key to terminate...\n');
                 return;
             end
-            fprintf("Initial Joint Angles: ")
-            for i=1:length(self.motor_ids)
-                self.joint_angles(i) = get_position(self, self.motor_ids(i));
-                fprintf('\n[ID:%03d] Pos:%02d', self.motor_ids(i), self.joint_angles(i));
 
-            end
-            self.set_speed([0.5,0.3,0.3,0.3]);
-            fprintf("\nSet initial speed to [05, 0.3, 0.3, 0.3]");
+            self.set_speed([0.1,0.1,0.1,0.1],true);
             self.set_torque_limit([1,1,1,1]);
-            fprintf("\nSet initial torque limit to [1 1 1 1]");
             self.move_j(0,0,0,0);
-            self.create_rbt();
+            self.init_status = 1;
             
         end
         
+        function smooth_speed(self,joint_angles)
+            max_angle = max(abs(joint_angles));
+            speed_per_deg = max_angle/100;
+            if speed_per_deg~=0
+                new_speeds = abs(joint_angles/speed_per_deg)*0.01;
+                for i=1:length(self.motor_speed)
+                    if new_speeds(i)==0
+                        new_speeds(i)=self.motor_speed(i);
+                    else
+                        new_speeds(i)=new_speeds(i)*self.motor_speed(i);
+                    end
+                end
+                self.set_speed(new_speeds,false);
+            end
+        end
+        
         function create_rbt(self)
+            self.rbt = rigidBodyTree;
             bodies = cell(4,1);
             joints = cell(4,1);
             for i = 1:4
-                bodies{i} = rigidBody(['body' num2str(i)]);
+                bodies{i} = rigidBody(['link' num2str(i)]);
                 joints{i} = rigidBodyJoint(['jnt' num2str(i)],"revolute");
                 joints{i}.PositionLimits = [self.joint_limits(i,1)*pi/180,self.joint_limits(i,2)*pi/180];
                 setFixedTransform(joints{i},self.dh(i,:),"dh");
@@ -115,7 +127,10 @@ classdef MyRobot < handle
             self.ik = inverseKinematics('RigidBodyTree',self.rbt);
         end
         
-        function set_speed(self, speeds)
+        function set_speed(self, speeds, overwrite_speeds)
+            if overwrite_speeds
+                self.motor_speed = speeds;
+            end
             for i=1:length(self.motor_ids)
                 if speeds(i) > 0 && speeds(i) <= 1
                     speed = speeds(i)*1023;
@@ -128,16 +143,16 @@ classdef MyRobot < handle
                         fprintf('\n%s', getRxPacketError(self.PROTOCOL_VERSION, dxl_error));
                     end
                 else
-                   fprint("\nMovement speed out of range, enter value between ]0,1]"); 
+                   fprintf("\nMovement speed out of range, enter value between ]0,1]"); 
                 end
             end
         end
         
-        function set_torque_limit(self, torque)
+        function set_torque_limit(self, torques)
+            self.motor_torque = torques;
             for i=1:length(self.motor_ids)
-                if torque(i) > 0 && torque(i) <= 1
-                    tor = torque(i)*1023;
-                    write2ByteTxRx(self.port_num, self.PROTOCOL_VERSION, self.motor_ids(i), 34, tor);
+                if torques(i) > 0 && torques(i) <= 1
+                    write2ByteTxRx(self.port_num, self.PROTOCOL_VERSION, self.motor_ids(i), 34, torques(i)*1023);
                     dxl_comm_result = getLastTxRxResult(self.port_num, self.PROTOCOL_VERSION);
                     dxl_error = getLastRxPacketError(self.port_num, self.PROTOCOL_VERSION);
                     if dxl_comm_result ~= self.COMM_SUCCESS
@@ -146,7 +161,7 @@ classdef MyRobot < handle
                         fprintf('%s\n', getRxPacketError(self.PROTOCOL_VERSION, dxl_error));
                     end
                 else
-                   fprint("\nTorque limit out of range, enter value between ]0,1]"); 
+                   fprintf("\nTorque limit out of range, enter value between ]0,1]"); 
                 end
             end
                 end
@@ -203,16 +218,17 @@ classdef MyRobot < handle
             
             % Unload Library
             unloadlibrary(self.lib_name);
+            self.init_status = 0;
         end
         
         function deg = check_limits(self,deg, motor_id)
             % see https://emanual.robotis.com/docs/en/dxl/ax/ax-12a/
             if motor_id==self.motor_ids(1)
-                assert(deg <= 150 && deg >= -150, "Angle Limits for first Axis Reached, Min/Max: +-90°");
+                assert(abs(deg) <= 130, "Angle Limits for first Axis Reached, Min/Max: +-130°");
             elseif motor_id==self.motor_ids(2)
-                assert(deg <= 0 && deg >= -160, "Angle Limits for second Axis Reached, Min/Max: +-90°");
+                assert(deg <= 0 && deg >= -180, "Angle Limits for second Axis Reached, Min/Max: [0,-180]°");
             else
-                assert(abs(deg) <= 80, "Angle Limits Reached, Min/Max: +-90°");
+                assert(abs(deg) <= 100, "Angle Limits Reached, Min/Max: +-100°");
             end
 
         end
@@ -231,8 +247,11 @@ classdef MyRobot < handle
             j3 = self.check_limits(j3, self.motor_ids(3));
             j4 = self.check_limits(j4, self.motor_ids(4));
 
-            self.joint_angles = [j1 j2 j3 0];
-            self.forward([j1 j2 j3 0]);
+            if self.use_smooth_speed_flag
+                self.smooth_speed([j1 j2 j3 j4]-self.joint_angles)
+            end
+            self.joint_angles = [j1 j2 j3 j4];
+            self.forward([j1 j2 j3 j4]);
             if self.draw_robot_flag
                 self.draw_robot()
             end
@@ -245,19 +264,32 @@ classdef MyRobot < handle
             write2ByteTxRx(self.port_num, self.PROTOCOL_VERSION, self.motor_ids(1), self.ADDR_MX_GOAL_POSITION, self.deg_to_rot(j1));
             write2ByteTxRx(self.port_num, self.PROTOCOL_VERSION, self.motor_ids(2), self.ADDR_MX_GOAL_POSITION, self.deg_to_rot(j2));
             write2ByteTxRx(self.port_num, self.PROTOCOL_VERSION, self.motor_ids(3), self.ADDR_MX_GOAL_POSITION, self.deg_to_rot(j3));
-            pause(1)
+            write2ByteTxRx(self.port_num, self.PROTOCOL_VERSION, self.motor_ids(4), self.ADDR_MX_GOAL_POSITION, self.deg_to_rot(j4));
+            
+            while 1
+                self.read_joint_angles();
+                if self.joint_angle_error<2
+                    break;
+                end
+            end
         end
         
         
         function draw_robot(self)
-            self.draw_robot_flag = 1;
+            if self.rbt == 0
+                self.create_rbt();
+            end
+            
             
             config = homeConfiguration(self.rbt);
             for i=1:length(self.joint_angles)
                 config(i).JointPosition = self.joint_angles(i)*pi/180;
             end
-            figure(Name="RRRR Robot Model");
+            if self.draw_robot_flag == 0
+                figure(Name="RRRR Robot Model");
+            end
             show(self.rbt,config);
+            self.draw_robot_flag = 1;
         end
         
         function ee_cartesian_coords = forward(self, j_a)
@@ -293,7 +325,37 @@ classdef MyRobot < handle
 %             self.joint_angles(3) = -180 -2 * atan2(d/2,h);
 %             self.joint_angles(4) = - self.joint_angles(2) - self.joint_angles(3);
 
+%             self.joint_angles(1) = atan2(y,x);
+%             self.joint_angles(2) = acos((x^2+y^2-self.dh(1,1)^2-self.dh(2,1)^2)/(2*self.dh(1,1)*self.dh(2,1)));
+%             self.joint_angles(3) = acos(((sqrt(x^2+y^2)-self.dh(4,1))^2+(self.dh(1,3)-z)^2)/...
+%                 (self.dh(2,1)^2+self.dh(3,1)^2 + 2*self.dh(2,1)*self.dh(3,1)));
+%             self.joint_angles(4) = - self.joint_angles(2) - self.joint_angles(3);
+%                     dh = [0   	-pi/2	0.0919 0;
+%             0.096	0       0       0;
+%             0.096	0	0	0;
+%             0.047  	0	0	0];
+        
+        
+            a1 = 0;
+            a2 = 0.096;
+            a3 = 0.096;
+            a4 = 0.047;
+            d1 = 0.0919;
+            pitch = 0;
+            
 
+            j1 = atan2(y,x);
+            j3 = pi + acos((a2^2/2 + a3^2/2 - (a4 - (x^2 + y^2)^(1/2))^2/2 - (d1 - z)^2/2)/(a2*a3));
+            %j3 = pi - acos((a2^2/2 + a3^2/2 - (a4 - (x^2 + y^2)^(1/2))^2/2 - (d1 - z)^2/2)/(a2*a3));
+            
+            j2 = (pi-j3)/2 + acos(sqrt((x^2+y^2)/(z^2+x^2+y^2)));
+            j4 = pitch - j2 - j3;
+
+
+            if self.rbt == 0
+                self.create_rbt();
+            end
+            
             j_a = zeros(4,1);            
             initialguess = self.rbt.homeConfiguration;           
             tform = [ 1 0 0 x;
@@ -301,7 +363,7 @@ classdef MyRobot < handle
                 0 -1 0 z;
                 0 0 0 1];
             
-            [configSoln,solnInfo] = self.ik('body4',tform,self.ik_weights,initialguess);
+            [configSoln,solnInfo] = self.ik('link4',tform,self.ik_weights,initialguess);
             if strcmp(solnInfo.Status,'success')
                 for i=1:4
                     j_a(i) = configSoln(i).JointPosition*180/pi;
@@ -343,6 +405,43 @@ classdef MyRobot < handle
         function move_c (self,x,y,z)
            j_a = self.inverse(x,y,z);
            self.move_j(j_a(1),j_a(2),j_a(3),j_a(4));
+        end
+        
+        function record_configuration(self)
+            j_a = self.joint_angles;
+            torque = self.motor_torque(1);
+            speed = self.motor_speed(1);
+            if isempty(self.movement_history)
+                self.movement_history = [j_a(1), j_a(2),j_a(3),j_a(4), speed, torque];
+            else
+                self.movement_history = [self.movement_history; j_a(1), j_a(2),j_a(3),j_a(4), speed, torque];
+            end
+            fprintf("\nRecorded Speed: %f, Torque: %f, \nJoint Positions: %f, %f, %f, %f",speed,torque,j_a(1),j_a(2),j_a(3),j_a(4));
+        end
+        
+        function delete_last_recorded_configuration(self)
+            length_history = size(self.movement_history);
+            if isempty(self.movement_history)
+                fprintf("No last history position"); 
+            elseif length_history(1)==1
+                self.movement_history = [];
+            else
+               self.movement_history(end,:) = [];
+            end
+        end
+        
+        function play_configuration_history(self)
+            if ~isempty(self.movement_history)
+               length_history = size(self.movement_history);
+               for i=1:length_history(1)
+                  speed = self.movement_history(i,5);
+                  torque = self.movement_history(i,6);
+                  self.set_speed([speed,speed, speed, speed],true);
+                  self.set_torque_limit([torque, torque, torque, torque]);
+                  self.move_j(self.movement_history(i,1),self.movement_history(i,2),self.movement_history(i,3),self.movement_history(i,4));
+                  pause(1);
+               end
+            end
         end
 
     end
