@@ -1,5 +1,7 @@
-# MyRobot Repo
-This robot was developed by me in collaboration with DTU and Novo Nordisk
+![DTU](https://github.com/MonsisGit/MyRobot/blob/master/doc/images/dtu.png)![novo](https://github.com/MonsisGit/MyRobot/blob/master/doc/images/novo.png)
+
+# MyRobot
+This robot was developed by me during an internship at Novo Nordisk in collaboration with DTU
 
 ## Links
 
@@ -56,5 +58,8 @@ Disable all motors. This is necessary to free up the com port. If you forgot to 
 ```
 robot.disable_motors();
 ```
+
+##Using the GUI
+Insert video
 
 
