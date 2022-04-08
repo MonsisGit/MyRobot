@@ -1,10 +1,6 @@
  | 
 :-------------------------:|:-------------------------:
-<div style="width:100px ; height:60px">
-![](https://github.com/MonsisGit/MyRobot/blob/master/doc/images/novo.png)
-<div>  |  <div style="width:100px ; height:60px">
-![](https://github.com/MonsisGit/MyRobot/blob/master/doc/images/dtu.png)
-<div>
+![](https://github.com/MonsisGit/MyRobot/blob/master/doc/images/novo.png)|![](https://github.com/MonsisGit/MyRobot/blob/master/doc/images/dtu.png)
 
 
 # MyRobot
