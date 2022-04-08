@@ -6,7 +6,7 @@
    <!--
 This HTML was auto-generated from MATLAB code.
 To make changes, update the MATLAB code and republish this document.
-      --><title>MyRobot</title><meta name="generator" content="MATLAB 9.10"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2022-03-27"><meta name="DC.source" content="MyRobot.m"><style type="text/css">
+      --><title>MyRobot</title><meta name="generator" content="MATLAB 9.10"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2022-04-08"><meta name="DC.source" content="MyRobot.m"><style type="text/css">
 html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
 
 html { min-height:100%; margin-bottom:1px; }
@@ -68,85 +68,108 @@ table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px soli
 
 
   </style></head><body><div class="content"><pre class="codeinput"><span class="keyword">classdef</span> MyRobot &lt; handle
-    <span class="keyword">properties</span>
-        lib_name = <span class="string">'dxl_x64_c'</span>;
-        <span class="comment">%if ~libisloaded(lib_name)</span>
-        <span class="comment">%    [notfound, warnings] = loadlibrary(lib_name, 'dynamixel_sdk.h', 'addheader', 'port_handler.h', 'addheader', 'packet_handler.h');</span>
-        <span class="comment">%end</span>
+    <span class="comment">% Class to control custom Robot</span>
+    <span class="comment">%</span>
+    <span class="comment">% Example usage:</span>
+    <span class="comment">%</span>
+    <span class="comment">% Initialize the robot, it should move to home configuration</span>
+    <span class="comment">% (0&deg;,0&deg;,0&deg;,0&deg;)</span>
+    <span class="comment">% robot = MyRobot();</span>
+    <span class="comment">%</span>
+    <span class="comment">% Set movements speed of each individual joint, update interal joint</span>
+    <span class="comment">% speeds for later commands</span>
+    <span class="comment">% robot.set_speed([0.1,0.1,0.1,0.2],true);</span>
+    <span class="comment">%</span>
+    <span class="comment">% Set all motors to maximum torque</span>
+    <span class="comment">% robot.set_torque_limit([1,1,1,1]);</span>
+    <span class="comment">%</span>
+    <span class="comment">% Draw the current configuration of the robot</span>
+    <span class="comment">% robot.draw_robot();</span>
+    <span class="comment">%</span>
+    <span class="comment">% Move the robots joints</span>
+    <span class="comment">% robot.move_j(20,-90,0,50);</span>
+    <span class="comment">%</span>
+    <span class="comment">% Actuate the gripper. If the gripper is currently closed, it will open</span>
+    <span class="comment">% robot.actuate_gripper();</span>
+    <span class="comment">%</span>
+    <span class="comment">% Get the robots current joint positions</span>
+    <span class="comment">% current_joint_positions = robot.joint_pos</span>
+    <span class="comment">%</span>
+    <span class="comment">% Disable all motors. This is necessary to free up the com port. If you</span>
+    <span class="comment">% forgot to do this and clear the robot object, it will fail at</span>
+    <span class="comment">% reinitialization. To fix this unplug the robots USB cable and clear</span>
+    <span class="comment">% the workspace</span>
+    <span class="comment">% robot.disable_motors();</span>
 
-        <span class="comment">% Control table address</span>
-        ADDR_MX_TORQUE_ENABLE       = 24;           <span class="comment">% Control table address is different in Dynamixel model</span>
-        ADDR_MX_GOAL_POSITION       = 30;
-        ADDR_MX_PRESENT_POSITION    = 36;
 
-        <span class="comment">% Protocol version</span>
+    <span class="keyword">properties</span> (Access = private)
+        lib_name = <span class="string">'dxl_x64_c'</span>;                     <span class="comment">% Library name for Win10</span>
+
+        ADDR_MX_TORQUE_ENABLE       = 24;           <span class="comment">% Control table address for enabling torque mode</span>
+        ADDR_MX_GOAL_POSITION       = 30;           <span class="comment">% Control table address for reading goal position</span>
+        ADDR_MX_PRESENT_POSITION    = 36;           <span class="comment">% Control table address for reading current position</span>
         PROTOCOL_VERSION            = 1.0;          <span class="comment">% See which protocol version is used in the Dynamixel</span>
-
-        motor_ids = [2 1 10 0];
-
-        BAUDRATE                    = 1000000;
+        BAUDRATE                    = 1000000;      <span class="comment">% Baudrate for Motors</span>
         DEVICENAME                  = <span class="string">'COM3'</span>;       <span class="comment">% Check which port is being used on your controller</span>
         <span class="comment">% ex) Windows: 'COM1'   Linux: '/dev/ttyUSB0' Mac: '/dev/tty.usbserial-*'</span>
-
         TORQUE_ENABLE               = 1;            <span class="comment">% Value for enabling the torque</span>
         TORQUE_DISABLE              = 0;            <span class="comment">% Value for disabling the torque</span>
         DXL_MOVING_STATUS_THRESHOLD = 10;           <span class="comment">% Dynamixel moving status threshold</span>
-
-        ESC_CHARACTER               = <span class="string">'e'</span>;          <span class="comment">% Key for escaping loop</span>
-
         COMM_SUCCESS                = 0;            <span class="comment">% Communication Success result value</span>
         COMM_TX_FAIL                = -1001;        <span class="comment">% Communication Tx Failed</span>
 
-        index = 1;
-        port_num=0;
-
-        <span class="comment">% a, alpha, d, theta</span>
-        dh = [0   	-90	0.0919 0;
-            0.096	0       0       0;
+        port_num=0;                                 <span class="comment">% Portnumber gets automatically handled by Porthandler</span>
+    <span class="keyword">end</span>
+    <span class="keyword">properties</span> (Access=public)
+        motor_ids = [0 1 2 3];                      <span class="comment">% Motor IDs chronologically (see Dynamixel Wizard for more info)</span>
+        gripper_motor_id = 4                        <span class="comment">% ID of gripper motor</span>
+        dh = [0   	-pi/2	0.0955 0;               <span class="comment">% Denavit Hartenberg Parameters for Robot (a, alpha, d, theta)</span>
+            0.116	0       0       0;
             0.096	0	0	0;
-            0.047  	0	0	0];
-
-        dh_rad = [0   	-pi/2	0.0919 0;
-            0.096	0       0       0;
-            0.096	0	0	0;
-            0.047  	0	0	0];
-
-        A = zeros(4,4);
-
-        joint_angles = [0 0 0 0];
-        joint_pos = zeros(4,4);
-
-        draw_robot_flag = 0;
-        rbt = rigidBodyTree;
-
-        joint_limits = [-180 180; -160 0; -80 80; -80 80];
-
-        ik = 0;
-        ik_weights = [0.25 0.25 0.25 1 1 1];
-        joint_offsets = [170 150+90 150 150];
-        joint_angle_error = [0 0 0 0];
+            0.064  	0	0	0];
+        forward_transform = zeros(4,4);             <span class="comment">% Forward transformation Matrix</span>
+        joint_angles = [0 0 0 0];                   <span class="comment">% Internal joint angles in degree</span>
+        joint_pos = zeros(4,4);                     <span class="comment">% Internal joint positions calculated with each move_j</span>
+        draw_robot_flag = 0;                        <span class="comment">% Flag for drawing robot configuration</span>
+        use_smooth_speed_flag = 0;                  <span class="comment">% Flag for using smooth speed</span>
+        gripper_open_flag = 1;                      <span class="comment">% Flag for gripper status</span>
+        rbt = 0;                                    <span class="comment">% RigidBodyTree</span>
+        joint_limits = [-130 130; -180 0; -100 100; -100 100]; <span class="comment">%Joint Limits in degree</span>
+        ik = 0;                                     <span class="comment">% Inverse Kinematics Object</span>
+        ik_weights = [0.25 0.25 0.25 1 1 1];        <span class="comment">% Weights for inverse kinematics</span>
+        joint_offsets = [171-5 150+90 150 150];     <span class="comment">% Joint offsets to send to motor</span>
+        joint_angle_error = [0 0 0 0];              <span class="comment">% Internal joint angle error between read out of joint angles and input joint angles</span>
+        init_status = 0;                            <span class="comment">% Initialization succesfull flag</span>
+        movement_history = [];                      <span class="comment">% List to record movement history</span>
+        motor_speed = 0;                            <span class="comment">% List for motor speed</span>
+        motor_torque = 0;                           <span class="comment">% List for motor torque</span>
+        pitch = 0;                                  <span class="comment">% Pitch Angle for motor 3</span>
 
     <span class="keyword">end</span>
     <span class="keyword">methods</span>
         <span class="keyword">function</span> self = MyRobot()
+            <span class="comment">%MyRobot Constructor for the MyRobot Class.</span>
+            <span class="comment">%   Initializes robot, setting initial motor speeds to 10%, motor</span>
+            <span class="comment">%   torque to 100% and sets initial joint angles to zero</span>
+            <span class="comment">%</span>
+            <span class="comment">%Inputs:</span>
+            <span class="comment">%   None</span>
+            <span class="comment">%Outputs:</span>
+            <span class="comment">%   self : MyRobot Object</span>
+
             <span class="keyword">if</span> ~libisloaded(self.lib_name)
-                [notfound, warnings] = loadlibrary(self.lib_name, <span class="string">'dynamixel_sdk.h'</span>, <span class="string">'addheader'</span>, <span class="string">'port_handler.h'</span>, <span class="string">'addheader'</span>, <span class="string">'packet_handler.h'</span>);
+                [~, ~] = loadlibrary(self.lib_name, <span class="string">'dynamixel_sdk.h'</span>, <span class="string">'addheader'</span>, <span class="string">'port_handler.h'</span>, <span class="string">'addheader'</span>, <span class="string">'packet_handler.h'</span>);
             <span class="keyword">end</span>
             self.port_num = portHandler(self.DEVICENAME);
             packetHandler();
-            <span class="comment">% Open port</span>
             <span class="keyword">if</span> (openPort(self.port_num))
                 fprintf(<span class="string">'Succeeded to open the port!\n'</span>);
             <span class="keyword">else</span>
                 fprintf(<span class="string">'Failed to open the port!\n'</span>);
-                <span class="comment">% Close port</span>
                 closePort(self.port_num);
                 unloadlibrary(lib_name);
-
-
             <span class="keyword">end</span>
 
-            <span class="comment">% Set port baudrate</span>
             <span class="keyword">if</span> (setBaudRate(self.port_num, self.BAUDRATE))
                 fprintf(<span class="string">'Succeeded to change the baudrate!\n'</span>);
             <span class="keyword">else</span>
@@ -155,29 +178,100 @@ table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px soli
                 input(<span class="string">'Press any key to terminate...\n'</span>);
                 <span class="keyword">return</span>;
             <span class="keyword">end</span>
-            fprintf(<span class="string">"Initial Joint Angles: "</span>)
-            <span class="keyword">for</span> i=1:length(self.motor_ids)
-                self.joint_angles(i) = get_position(self, self.motor_ids(i));
-                fprintf(<span class="string">'\n[ID:%03d] Pos:%02d'</span>, self.motor_ids(i), self.joint_angles(i));
 
-            <span class="keyword">end</span>
-            self.set_speed([0.5,0.3,0.3,0.3]);
-            fprintf(<span class="string">"\nSet initial speed to [05, 0.3, 0.3, 0.3]"</span>);
+            self.set_speed([0.1,0.1,0.1,0.1],true);
             self.set_torque_limit([1,1,1,1]);
-            fprintf(<span class="string">"\nSet initial torque limit to [1 1 1 1]"</span>);
             self.move_j(0,0,0,0);
-            self.create_rbt();
+            self.init_status = 1;
 
         <span class="keyword">end</span>
 
+        <span class="keyword">function</span> open_gripper(self)
+            <span class="comment">%open_gripper function for the MyRobot Class.</span>
+            <span class="comment">%   Opens the gripper</span>
+            <span class="comment">%</span>
+            <span class="comment">%Inputs:</span>
+            <span class="comment">%   None</span>
+            <span class="comment">%Outputs:</span>
+            <span class="comment">%   None</span>
+            <span class="keyword">if</span> ~self.gripper_open_flag
+                write2ByteTxRx(self.port_num, self.PROTOCOL_VERSION, self.gripper_motor_id, self.ADDR_MX_GOAL_POSITION, 0);
+                self.gripper_open_flag = 1;
+            <span class="keyword">end</span>
+        <span class="keyword">end</span>
+
+        <span class="keyword">function</span> close_gripper(self)
+            <span class="comment">%close_gripper function for the MyRobot Class.</span>
+            <span class="comment">%   Closes the gripper</span>
+            <span class="comment">%</span>
+            <span class="comment">%Inputs:</span>
+            <span class="comment">%   None</span>
+            <span class="comment">%Outputs:</span>
+            <span class="comment">%   None</span>
+            <span class="keyword">if</span> self.gripper_open_flag
+                write2ByteTxRx(self.port_num, self.PROTOCOL_VERSION, self.gripper_motor_id, self.ADDR_MX_GOAL_POSITION, 1023);
+                self.gripper_open_flag = 0;
+            <span class="keyword">end</span>
+        <span class="keyword">end</span>
+
+        <span class="keyword">function</span> actuate_gripper(self)
+            <span class="comment">%actuate_gripper function for the MyRobot Class.</span>
+            <span class="comment">%   opens gripper if closed, closes gripper if open</span>
+            <span class="comment">%</span>
+            <span class="comment">%Inputs:</span>
+            <span class="comment">%   None</span>
+            <span class="comment">%Outputs:</span>
+            <span class="comment">%   None</span>
+            <span class="keyword">if</span> self.gripper_open_flag
+                self.close_gripper();
+            <span class="keyword">else</span>
+                self.open_gripper();
+            <span class="keyword">end</span>
+        <span class="keyword">end</span>
+
+        <span class="keyword">function</span> smooth_speed(self,joint_angles)
+            <span class="comment">%smooth_speed function for the MyRobot Class.</span>
+            <span class="comment">%   Dynamically changes the speed of each joint to create</span>
+            <span class="comment">%   smoother motion. It assures all joint movements finish at</span>
+            <span class="comment">%   the same time</span>
+            <span class="comment">%</span>
+            <span class="comment">%Inputs:</span>
+            <span class="comment">%   joint_angles : a vector representing joint angles [deg]</span>
+            <span class="comment">%Outputs:</span>
+            <span class="comment">%   None</span>
+            max_angle = max(abs(joint_angles));
+            speed_per_deg = max_angle/100;
+            <span class="keyword">if</span> speed_per_deg~=0
+                new_speeds = abs(joint_angles/speed_per_deg)*0.01;
+                <span class="keyword">for</span> i=1:length(self.motor_speed)
+                    <span class="keyword">if</span> new_speeds(i)==0
+                        new_speeds(i)=self.motor_speed(i);
+                    <span class="keyword">else</span>
+                        new_speeds(i)=new_speeds(i)*self.motor_speed(i);
+                    <span class="keyword">end</span>
+                <span class="keyword">end</span>
+                self.set_speed(new_speeds,false);
+            <span class="keyword">end</span>
+        <span class="keyword">end</span>
+
         <span class="keyword">function</span> create_rbt(self)
+            <span class="comment">%create_rbt function for the MyRobot Class.</span>
+            <span class="comment">%   Creates a rigid body tree using the DH parameters of the</span>
+            <span class="comment">%   MyRobot Class and sets up inverse kinematics using the</span>
+            <span class="comment">%   matlab robotics toolbox</span>
+            <span class="comment">%</span>
+            <span class="comment">%Inputs:</span>
+            <span class="comment">%   None</span>
+            <span class="comment">%Outputs:</span>
+            <span class="comment">%   None</span>
+            self.rbt = rigidBodyTree;
             bodies = cell(4,1);
             joints = cell(4,1);
             <span class="keyword">for</span> i = 1:4
-                bodies{i} = rigidBody([<span class="string">'body'</span> num2str(i)]);
+                bodies{i} = rigidBody([<span class="string">'link'</span> num2str(i)]);
                 joints{i} = rigidBodyJoint([<span class="string">'jnt'</span> num2str(i)],<span class="string">"revolute"</span>);
                 joints{i}.PositionLimits = [self.joint_limits(i,1)*pi/180,self.joint_limits(i,2)*pi/180];
-                setFixedTransform(joints{i},self.dh_rad(i,:),<span class="string">"dh"</span>);
+                setFixedTransform(joints{i},self.dh(i,:),<span class="string">"dh"</span>);
                 bodies{i}.Joint = joints{i};
                 <span class="keyword">if</span> i == 1 <span class="comment">% Add first body to base</span>
                     addBody(self.rbt,bodies{i},<span class="string">"base"</span>)
@@ -188,7 +282,20 @@ table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px soli
             self.ik = inverseKinematics(<span class="string">'RigidBodyTree'</span>,self.rbt);
         <span class="keyword">end</span>
 
-        <span class="keyword">function</span> set_speed(self, speeds)
+        <span class="keyword">function</span> set_speed(self, speeds, overwrite_speeds)
+            <span class="comment">%set_speed function for the MyRobot Class.</span>
+            <span class="comment">%   Sets individual motor speeds between 0% and 100%</span>
+            <span class="comment">%</span>
+            <span class="comment">%Inputs:</span>
+            <span class="comment">%   speeds : a vector representing motor speeds for each motor</span>
+            <span class="comment">%   ID between 0 and 1</span>
+            <span class="comment">%   overwrite_speeds: boolean, if true class internal motor</span>
+            <span class="comment">%   speeds are overwritten to motor speeds of function call</span>
+            <span class="comment">%Outputs:</span>
+            <span class="comment">%   None</span>
+            <span class="keyword">if</span> overwrite_speeds
+                self.motor_speed = speeds;
+            <span class="keyword">end</span>
             <span class="keyword">for</span> i=1:length(self.motor_ids)
                 <span class="keyword">if</span> speeds(i) &gt; 0 &amp;&amp; speeds(i) &lt;= 1
                     speed = speeds(i)*1023;
@@ -201,16 +308,25 @@ table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px soli
                         fprintf(<span class="string">'\n%s'</span>, getRxPacketError(self.PROTOCOL_VERSION, dxl_error));
                     <span class="keyword">end</span>
                 <span class="keyword">else</span>
-                   fprint(<span class="string">"\nMovement speed out of range, enter value between ]0,1]"</span>);
+                   fprintf(<span class="string">"\nMovement speed out of range, enter value between ]0,1]"</span>);
                 <span class="keyword">end</span>
             <span class="keyword">end</span>
         <span class="keyword">end</span>
 
-        <span class="keyword">function</span> set_torque_limit(self, torque)
+        <span class="keyword">function</span> set_torque_limit(self, torques)
+            <span class="comment">%set_torque_limit function for the MyRobot Class.</span>
+            <span class="comment">%   Sets individual motor torques between 0% and 100%</span>
+            <span class="comment">%</span>
+            <span class="comment">%Inputs:</span>
+            <span class="comment">%   speeds : a vector representing motor torque for each motor</span>
+            <span class="comment">%   ID between 0 and 1</span>
+            <span class="comment">%Outputs:</span>
+            <span class="comment">%   None</span>
+
+            self.motor_torque = torques;
             <span class="keyword">for</span> i=1:length(self.motor_ids)
-                <span class="keyword">if</span> torque(i) &gt; 0 &amp;&amp; torque(i) &lt;= 1
-                    tor = torque(i)*1023;
-                    write2ByteTxRx(self.port_num, self.PROTOCOL_VERSION, self.motor_ids(i), 34, tor);
+                <span class="keyword">if</span> torques(i) &gt; 0 &amp;&amp; torques(i) &lt;= 1
+                    write2ByteTxRx(self.port_num, self.PROTOCOL_VERSION, self.motor_ids(i), 34, torques(i)*1023);
                     dxl_comm_result = getLastTxRxResult(self.port_num, self.PROTOCOL_VERSION);
                     dxl_error = getLastRxPacketError(self.port_num, self.PROTOCOL_VERSION);
                     <span class="keyword">if</span> dxl_comm_result ~= self.COMM_SUCCESS
@@ -219,14 +335,20 @@ table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px soli
                         fprintf(<span class="string">'%s\n'</span>, getRxPacketError(self.PROTOCOL_VERSION, dxl_error));
                     <span class="keyword">end</span>
                 <span class="keyword">else</span>
-                   fprint(<span class="string">"\nTorque limit out of range, enter value between ]0,1]"</span>);
+                   fprintf(<span class="string">"\nTorque limit out of range, enter value between ]0,1]"</span>);
                 <span class="keyword">end</span>
             <span class="keyword">end</span>
                 <span class="keyword">end</span>
 
         <span class="keyword">function</span> enable_motors(self)
+            <span class="comment">%enable_motors function for the MyRobot Class.</span>
+            <span class="comment">%   Enables all motors</span>
+            <span class="comment">%</span>
+            <span class="comment">%Inputs:</span>
+            <span class="comment">%   None</span>
+            <span class="comment">%Outputs:</span>
+            <span class="comment">%   None</span>
 
-            <span class="comment">% Enable Dynamixel Torque</span>
             <span class="keyword">for</span> i=1:length(self.motor_ids)
                 write1ByteTxRx(self.port_num, self.PROTOCOL_VERSION, self.motor_ids(i), self.ADDR_MX_TORQUE_ENABLE, self.TORQUE_ENABLE);
                 dxl_comm_result = getLastTxRxResult(self.port_num, self.PROTOCOL_VERSION);
@@ -243,6 +365,14 @@ table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px soli
         <span class="keyword">end</span>
 
         <span class="keyword">function</span> deg_present_position = get_position(self, motor_id)
+            <span class="comment">%get_position function for the MyRobot Class.</span>
+            <span class="comment">%   Reads current position of motor</span>
+            <span class="comment">%</span>
+            <span class="comment">%Inputs:</span>
+            <span class="comment">%   motor_id : integer representing the motors ID</span>
+            <span class="comment">%Outputs:</span>
+            <span class="comment">%   deg_present_position : value of current position [deg]</span>
+
             dxl_present_position = read2ByteTxRx(self.port_num, self.PROTOCOL_VERSION, motor_id, self.ADDR_MX_PRESENT_POSITION);
             deg_present_position = self.rot_to_deg(dxl_present_position);
             dxl_comm_result = getLastTxRxResult(self.port_num, self.PROTOCOL_VERSION);
@@ -255,10 +385,15 @@ table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px soli
         <span class="keyword">end</span>
 
         <span class="keyword">function</span> disable_motors(self)
+            <span class="comment">%disable_motors function for the MyRobot Class.</span>
+            <span class="comment">%   Disables all motors</span>
+            <span class="comment">%</span>
+            <span class="comment">%Inputs:</span>
+            <span class="comment">%   None</span>
+            <span class="comment">%Outputs:</span>
+            <span class="comment">%   None</span>
 
             <span class="keyword">for</span> i=1:length(self.motor_ids)
-
-                <span class="comment">% Disable Dynamixel Torque</span>
                 write1ByteTxRx(self.port_num, self.PROTOCOL_VERSION, self.motor_ids(i), self.ADDR_MX_TORQUE_ENABLE, self.TORQUE_DISABLE);
                 dxl_comm_result = getLastTxRxResult(self.port_num, self.PROTOCOL_VERSION);
                 dxl_error = getLastRxPacketError(self.port_num, self.PROTOCOL_VERSION);
@@ -271,41 +406,79 @@ table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px soli
 
                 <span class="keyword">end</span>
             <span class="keyword">end</span>
-            <span class="comment">% Close port</span>
             closePort(self.port_num);
-
-            <span class="comment">% Unload Library</span>
             unloadlibrary(self.lib_name);
+            self.init_status = 0;
         <span class="keyword">end</span>
 
         <span class="keyword">function</span> deg = check_limits(self,deg, motor_id)
-            <span class="comment">% see https://emanual.robotis.com/docs/en/dxl/ax/ax-12a/</span>
+            <span class="comment">%check_limits function for the MyRobot Class.</span>
+            <span class="comment">%   Checks if joint angle is within motor limits, depending on</span>
+            <span class="comment">%   the motor, see https://emanual.robotis.com/docs/en/dxl/ax/ax-12a/</span>
+            <span class="comment">%</span>
+            <span class="comment">%Inputs:</span>
+            <span class="comment">%   deg : value for joint angle [deg]</span>
+            <span class="comment">%   motor_id : int of motors ID</span>
+            <span class="comment">%Outputs:</span>
+            <span class="comment">%   deg : returns input value if checks pass [deg]</span>
             <span class="keyword">if</span> motor_id==self.motor_ids(1)
-                <span class="keyword">return</span>
+                assert(abs(deg) &lt;= 130, <span class="string">"Angle Limits for first Axis Reached, Min/Max: +-130&deg;"</span>);
             <span class="keyword">elseif</span> motor_id==self.motor_ids(2)
-                assert(deg &lt;= 0 &amp;&amp; deg &gt;= -160, <span class="string">"Angle Limits for second Axis Reached, Min/Max: +-90&deg;"</span>);
+                assert(deg &lt;= 0 &amp;&amp; deg &gt;= -180, <span class="string">"Angle Limits for second Axis Reached, Min/Max: [0,-180]&deg;"</span>);
             <span class="keyword">else</span>
-                assert(abs(deg) &lt;= 80, <span class="string">"Angle Limits Reached, Min/Max: +-90&deg;"</span>);
+                assert(abs(deg) &lt;= 100, <span class="string">"Angle Limits Reached, Min/Max: +-100&deg;"</span>);
             <span class="keyword">end</span>
 
         <span class="keyword">end</span>
 
         <span class="keyword">function</span> rot = deg_to_rot(self,deg)
+            <span class="comment">%deg_to_rot function for the MyRobot Class.</span>
+            <span class="comment">%   Converts degree to units per rotation of motors</span>
+            <span class="comment">%</span>
+            <span class="comment">%Inputs:</span>
+            <span class="comment">%   deg : value [deg]</span>
+            <span class="comment">%Outputs:</span>
+            <span class="comment">%   rot : value in units per rotation of motor</span>
             rot = deg*1/0.29;
         <span class="keyword">end</span>
 
         <span class="keyword">function</span> deg = rot_to_deg(self,rot)
+            <span class="comment">%rot_to_deg function for the MyRobot Class.</span>
+            <span class="comment">%   Convers units per rotation of motors to degree</span>
+            <span class="comment">%</span>
+            <span class="comment">%Inputs:</span>
+            <span class="comment">%   rot : value in units per rotation of motor</span>
+            <span class="comment">%Outputs:</span>
+            <span class="comment">%   deg : value [deg]</span>
             deg = rot*0.29;
         <span class="keyword">end</span>
 
         <span class="keyword">function</span> move_j(self,j1,j2,j3,j4)
+            <span class="comment">%move_j function for the MyRobot Class.</span>
+            <span class="comment">%   Moves the robot arm to the desired joint angles, checks</span>
+            <span class="comment">%   joint limits, updates internal robot state and waits until</span>
+            <span class="comment">%   the joint angle error between desired and mesured joint</span>
+            <span class="comment">%   angle is below 2&deg;</span>
+            <span class="comment">%</span>
+            <span class="comment">%Inputs:</span>
+            <span class="comment">%   j1 : value for joint one [deg]</span>
+            <span class="comment">%   j2 : value for joint two [deg]</span>
+            <span class="comment">%   j3 : value for joint three [deg]</span>
+            <span class="comment">%   j4 : value for joint four [deg]</span>
+
+            <span class="comment">%Outputs:</span>
+            <span class="comment">%   None</span>
+
             j1 = self.check_limits(j1, self.motor_ids(1));
             j2 = self.check_limits(j2, self.motor_ids(2));
             j3 = self.check_limits(j3, self.motor_ids(3));
             j4 = self.check_limits(j4, self.motor_ids(4));
 
-            self.joint_angles = [j1 j2 j3 0];
-            self.forward([j1 j2 j3 0]);
+            <span class="keyword">if</span> self.use_smooth_speed_flag
+                self.smooth_speed([j1 j2 j3 j4]-self.joint_angles)
+            <span class="keyword">end</span>
+            self.joint_angles = [j1 j2 j3 j4];
+            self.forward([j1 j2 j3 j4]);
             <span class="keyword">if</span> self.draw_robot_flag
                 self.draw_robot()
             <span class="keyword">end</span>
@@ -318,80 +491,109 @@ table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px soli
             write2ByteTxRx(self.port_num, self.PROTOCOL_VERSION, self.motor_ids(1), self.ADDR_MX_GOAL_POSITION, self.deg_to_rot(j1));
             write2ByteTxRx(self.port_num, self.PROTOCOL_VERSION, self.motor_ids(2), self.ADDR_MX_GOAL_POSITION, self.deg_to_rot(j2));
             write2ByteTxRx(self.port_num, self.PROTOCOL_VERSION, self.motor_ids(3), self.ADDR_MX_GOAL_POSITION, self.deg_to_rot(j3));
-            pause(1)
+            write2ByteTxRx(self.port_num, self.PROTOCOL_VERSION, self.motor_ids(4), self.ADDR_MX_GOAL_POSITION, self.deg_to_rot(j4));
+
+            <span class="keyword">while</span> 1
+                self.read_joint_angles();
+                <span class="keyword">if</span> self.joint_angle_error&lt;2
+                    <span class="keyword">break</span>;
+                <span class="keyword">end</span>
+            <span class="keyword">end</span>
         <span class="keyword">end</span>
 
 
         <span class="keyword">function</span> draw_robot(self)
-            self.draw_robot_flag = 1;
+            <span class="comment">%draw_robot function for the MyRobot Class.</span>
+            <span class="comment">%   Draws robot coordinate frames using the rigid body tree</span>
+            <span class="comment">%</span>
+            <span class="comment">%Inputs:</span>
+            <span class="comment">%   None</span>
+            <span class="comment">%Outputs:</span>
+            <span class="comment">%   None</span>
+
+            <span class="keyword">if</span> self.rbt == 0
+                self.create_rbt();
+            <span class="keyword">end</span>
 
             config = homeConfiguration(self.rbt);
             <span class="keyword">for</span> i=1:length(self.joint_angles)
                 config(i).JointPosition = self.joint_angles(i)*pi/180;
             <span class="keyword">end</span>
-            figure(Name=<span class="string">"RRRR Robot Model"</span>);
+            <span class="keyword">if</span> self.draw_robot_flag == 0
+                figure(Name=<span class="string">"RRRR Robot Model"</span>);
+            <span class="keyword">end</span>
             show(self.rbt,config);
+            self.draw_robot_flag = 1;
         <span class="keyword">end</span>
 
         <span class="keyword">function</span> ee_cartesian_coords = forward(self, j_a)
+           <span class="comment">%forward function for the MyRobot Class.</span>
+            <span class="comment">%   Calculates forward transformation for all joint positions</span>
+            <span class="comment">%   and end effector coordinates</span>
+            <span class="comment">%</span>
+            <span class="comment">%Inputs:</span>
+            <span class="comment">%   j_a : a vector of four joint angles in [rad]</span>
+            <span class="comment">%Outputs:</span>
+            <span class="comment">%   ee_cartesian_coords : returns cartesian coordinates of end</span>
+            <span class="comment">%   effector in the base coordinate system in [m]</span>
 
-            self.A = [cosd(j_a(1)) -sind(j_a(1))*cosd(self.dh(1,2))  sind(j_a(1))*sind(self.dh(1,2)) self.dh(1,1)*cosd(j_a(1));
-                sind(j_a(1)) cosd(j_a(1))*cosd(self.dh(1,2)) -cosd(j_a(1))*sind(self.dh(1,2)) self.dh(1,1)*sind(j_a(1));
-                0 sind(self.dh(1,2)) cosd(self.dh(1,2)) self.dh(1,3);
+            self.forward_transform = [cosd(j_a(1)) -sind(j_a(1))*cos(self.dh(1,2))  sind(j_a(1))*sin(self.dh(1,2)) self.dh(1,1)*cos(j_a(1));
+                sind(j_a(1)) cosd(j_a(1))*cos(self.dh(1,2)) -cosd(j_a(1))*sin(self.dh(1,2)) self.dh(1,1)*sind(j_a(1));
+                0 sin(self.dh(1,2)) cos(self.dh(1,2)) self.dh(1,3);
                 0 0 0 1];
 
-            self.joint_pos(:,1) = self.A * [0 0 0 1]' ;
+            self.joint_pos(:,1) = self.forward_transform * [0 0 0 1]' ;
             self.joint_pos(:,1) = self.joint_pos(:,1) / self.joint_pos(4,1);
 
             <span class="keyword">for</span> i=2:length(j_a)
-                self.A = self.A * [cosd(j_a(i)) -sind(j_a(i))*cosd(self.dh(i,2))  sind(j_a(i))*sind(self.dh(i,2)) self.dh(i,1)*cosd(j_a(i));
-                    sind(j_a(i)) cosd(j_a(i))*cosd(self.dh(i,2)) -cosd(j_a(i))*sind(self.dh(i,2)) self.dh(i,1)*sind(j_a(i));
-                    0 sind(self.dh(i,2)) cosd(self.dh(i,2)) self.dh(i,3);
+                self.forward_transform = self.forward_transform * [cosd(j_a(i)) -sind(j_a(i))*cos(self.dh(i,2))  sind(j_a(i))*sin(self.dh(i,2)) self.dh(i,1)*cosd(j_a(i));
+                    sind(j_a(i)) cosd(j_a(i))*cos(self.dh(i,2)) -cosd(j_a(i))*sin(self.dh(i,2)) self.dh(i,1)*sind(j_a(i));
+                    0 sin(self.dh(i,2)) cos(self.dh(i,2)) self.dh(i,3);
                     0 0 0 1];
-                self.joint_pos(:,i) = self.A * [0 0 0 1]' ;
+                self.joint_pos(:,i) = self.forward_transform * [0 0 0 1]' ;
                 self.joint_pos(:,i) = self.joint_pos(:,i) / self.joint_pos(4,i);
             <span class="keyword">end</span>
 
-            ee_cartesian_coords = self.A * [0 0 0 1]' ;
+            ee_cartesian_coords = self.forward_transform * [0 0 0 1]' ;
             ee_cartesian_coords = ee_cartesian_coords/ee_cartesian_coords(4);
         <span class="keyword">end</span>
 
-        <span class="keyword">function</span> j_a = inverse(self, x,y,z)
-<span class="comment">%             self.joint_angles(1) = atan2(y,x);</span>
-<span class="comment">%</span>
-<span class="comment">%             r = sqrt(x^2+y^2);</span>
-<span class="comment">%             d = sqrt(r^2+(z-0.091)^2);</span>
-<span class="comment">%             h = sqrt(0.096^2-(d/2)^2);</span>
-<span class="comment">%             self.joint_angles(2) = atan2(z-0.096,r) + atan2(h,d/2);</span>
-<span class="comment">%             self.joint_angles(3) = -180 -2 * atan2(d/2,h);</span>
-<span class="comment">%             self.joint_angles(4) = - self.joint_angles(2) - self.joint_angles(3);</span>
+        <span class="keyword">function</span> j_a = inverse(self, x,y,z,pitch)
+            <span class="comment">%inverse function for the MyRobot Class.</span>
+            <span class="comment">%   Calculates inverse kinematics for the robot</span>
+            <span class="comment">%</span>
+            <span class="comment">%Inputs:</span>
+            <span class="comment">%   x : value for desired x position of the robot end effector</span>
+            <span class="comment">%   [m]</span>
+            <span class="comment">%   y : value for desired y position of the robot end effector</span>
+            <span class="comment">%   [m]</span>
+            <span class="comment">%   z : value for desired z position of the robot end effector</span>
+            <span class="comment">%   [m]</span>
+            <span class="comment">%   pitch : value for desired x position of the robot end</span>
+            <span class="comment">%   effector [deg]</span>
 
+            <span class="comment">%Outputs:</span>
+            <span class="comment">%   j_a : a vector containing joint angles [deg]</span>
 
-            j_a = zeros(4,1);
-            initialguess = self.rbt.homeConfiguration;
-            tform = [ 1 0 0 x;
-                0 0 1 y;
-                0 -1 0 z;
-                0 0 0 1];
+            j1 = atan2(y,x);
+            j3 = acos( ((sqrt(x^2+y^2)-self.dh(4,1)*cos(pitch))^2 + (self.dh(1,3)-z)^2 - self.dh(2,1)^2 - self.dh(3,1)^2) / (2*self.dh(2,1)*self.dh(3,1)) );
+            assert(isreal(j3),<span class="string">"Configuration Impossible"</span>);
+            j2 = -atan2(z-self.dh(1,3)-self.dh(4,1)*sin(pitch),sqrt(x^2+y^2)-self.dh(4,1)*cos(pitch)) - atan2(self.dh(3,1)+self.dh(2,1)*cos(j3),self.dh(2,1)*sin(j3)) + (pi/2-j3);
+            j4 = pitch - j2 - j3;
 
-            [configSoln,solnInfo] = self.ik(<span class="string">'body4'</span>,tform,self.ik_weights,initialguess);
-            <span class="keyword">if</span> strcmp(solnInfo.Status,<span class="string">'success'</span>)
-                <span class="keyword">for</span> i=1:4
-                    j_a(i) = configSoln(i).JointPosition*180/pi;
-                <span class="keyword">end</span>
-            <span class="keyword">elseif</span> strcmp(solnInfo.Status,<span class="string">'best available'</span>)
-                fprintf(<span class="string">"Status: '%s', using Angles:\n"</span>, solnInfo.Status);
-                <span class="keyword">for</span> i=1:4
-                    j_a(i) = configSoln(i).JointPosition*180/pi;
-                    fprintf(<span class="string">"%f&deg;  "</span>,configSoln(i).JointPosition*180/pi);
-                <span class="keyword">end</span>
-            <span class="keyword">else</span>
-                fprintf(<span class="string">"Unsuccesfull IK, with status: '%s'"</span>, solnInfo.Status);
-            <span class="keyword">end</span>
-
+            j_a = rad2deg([j1 j2 j3 j4]);
+            self.pitch = pitch;
+            assert(isreal(j_a),<span class="string">"Configuration Impossible"</span>);
         <span class="keyword">end</span>
 
         <span class="keyword">function</span> j_a = read_joint_angles(self)
+            <span class="comment">%read_joint_angles function for the MyRobot Class.</span>
+            <span class="comment">%   reads joint angles of all motor IDs</span>
+            <span class="comment">%</span>
+            <span class="comment">%Inputs:</span>
+            <span class="comment">%   None</span>
+            <span class="comment">%Outputs:</span>
+            <span class="comment">%   j_a : a vector containing joint angles [deg]</span>
             j_a = zeros(4,1);
             <span class="keyword">for</span> i=1:length(self.motor_ids)
                 dxl_present_position = read2ByteTxRx(self.port_num, self.PROTOCOL_VERSION, self.motor_ids(i), 36);
@@ -409,103 +611,213 @@ table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px soli
         <span class="keyword">end</span>
 
         <span class="keyword">function</span> ee_pos = read_ee_position(self)
+           <span class="comment">%read_ee_position function for the MyRobot Class.</span>
+            <span class="comment">%   Reads motors joint angles and calculates the end effector</span>
+            <span class="comment">%   position from that</span>
+            <span class="comment">%</span>
+            <span class="comment">%Inputs:</span>
+            <span class="comment">%   None</span>
+            <span class="comment">%Outputs:</span>
+            <span class="comment">%   ee_pos : a vector containing the end effector position [m]</span>
            j_a = self.read_joint_angles();
            ee_pos = self.forward(j_a);
         <span class="keyword">end</span>
 
-        <span class="keyword">function</span> move_c (self,x,y,z)
-           j_a = self.inverse(x,y,z);
+        <span class="keyword">function</span> move_c (self,x,y,z,pitch)
+            <span class="comment">%move_c function for the MyRobot Class.</span>
+            <span class="comment">%   Moves robot in cartesian space using inverse kinematics</span>
+            <span class="comment">%</span>
+            <span class="comment">%Inputs:</span>
+            <span class="comment">%   x : value for desired x position of the robot end effector</span>
+            <span class="comment">%   [m]</span>
+            <span class="comment">%   y : value for desired y position of the robot end effector</span>
+            <span class="comment">%   [m]</span>
+            <span class="comment">%   z : value for desired z position of the robot end effector</span>
+            <span class="comment">%   [m]</span>
+            <span class="comment">%   pitch : value for desired x position of the robot end</span>
+            <span class="comment">%   effector [deg]</span>
+
+            <span class="comment">%Outputs:</span>
+            <span class="comment">%   None</span>
+           j_a = self.inverse(x,y,z,deg2rad(pitch));
            self.move_j(j_a(1),j_a(2),j_a(3),j_a(4));
         <span class="keyword">end</span>
+
+        <span class="keyword">function</span> record_configuration(self)
+            <span class="comment">%record_configuration function for the MyRobot Class.</span>
+            <span class="comment">%   Records current robot configuration (joint angles, speed,</span>
+            <span class="comment">%   torque, gripper state)</span>
+            <span class="comment">%</span>
+            <span class="comment">%Inputs:</span>
+            <span class="comment">%   None</span>
+            <span class="comment">%Outputs:</span>
+            <span class="comment">%   None</span>
+            j_a = self.joint_angles;
+            torque = self.motor_torque(1);
+            speed = self.motor_speed(1);
+            <span class="keyword">if</span> isempty(self.movement_history)
+                self.movement_history = [j_a(1), j_a(2),j_a(3),j_a(4), speed, torque,self.gripper_open_flag];
+            <span class="keyword">else</span>
+                self.movement_history = [self.movement_history; j_a(1), j_a(2),j_a(3),j_a(4), speed, torque,self.gripper_open_flag];
+            <span class="keyword">end</span>
+            fprintf(<span class="string">"\nRecorded Speed: %f, Torque: %f, \nJoint Positions: %f, %f, %f, %f,\nGripper open: %f"</span>,speed,torque,j_a(1),j_a(2),j_a(3),j_a(4), self.gripper_open_flag);
+        <span class="keyword">end</span>
+
+        <span class="keyword">function</span> delete_last_recorded_configuration(self)
+            <span class="comment">%delete_last_recorded_configuration function for the MyRobot Class.</span>
+            <span class="comment">%   Deletes last recorded robot configuration</span>
+            <span class="comment">%</span>
+            <span class="comment">%Inputs:</span>
+            <span class="comment">%   None</span>
+            <span class="comment">%Outputs:</span>
+            <span class="comment">%   None</span>
+            length_history = size(self.movement_history);
+            <span class="keyword">if</span> isempty(self.movement_history)
+                fprintf(<span class="string">"No last history position"</span>);
+            <span class="keyword">elseif</span> length_history(1)==1
+                self.movement_history = [];
+            <span class="keyword">else</span>
+               self.movement_history(end,:) = [];
+            <span class="keyword">end</span>
+        <span class="keyword">end</span>
+
+        <span class="keyword">function</span> play_configuration_history(self)
+            <span class="comment">%play_configuration_history function for the MyRobot Class.</span>
+            <span class="comment">%   Plays recorded configuration history</span>
+            <span class="comment">%</span>
+            <span class="comment">%Inputs:</span>
+            <span class="comment">%   None</span>
+            <span class="comment">%Outputs:</span>
+            <span class="comment">%   None</span>
+            <span class="keyword">if</span> ~isempty(self.movement_history)
+               length_history = size(self.movement_history);
+               <span class="keyword">for</span> i=1:length_history(1)
+                  speed = self.movement_history(i,5);
+                  torque = self.movement_history(i,6);
+                  self.set_speed([speed,speed, speed, speed],true);
+                  self.set_torque_limit([torque, torque, torque, torque]);
+                  self.move_j(self.movement_history(i,1),self.movement_history(i,2),self.movement_history(i,3),self.movement_history(i,4));
+                  pause(1);
+                  <span class="keyword">if</span> self.gripper_open_flag ~= self.movement_history(i,7)
+                      self.actuate_gripper();
+                      pause(3);
+                  <span class="keyword">end</span>
+               <span class="keyword">end</span>
+            <span class="keyword">end</span>
+        <span class="keyword">end</span>
+
     <span class="keyword">end</span>
 <span class="keyword">end</span>
 </pre><pre class="codeoutput">Failed to open the port!
 </pre><pre class="codeoutput error">Unrecognized function or variable 'lib_name'.
 
-Error in MyRobot (line 75)
+Error in MyRobot (line 101)
                 unloadlibrary(lib_name);
 </pre><p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2021a</a><br></p></div><!--
 ##### SOURCE BEGIN #####
 classdef MyRobot < handle
-    properties
-        lib_name = 'dxl_x64_c';
-        %if ~libisloaded(lib_name)
-        %    [notfound, warnings] = loadlibrary(lib_name, 'dynamixel_sdk.h', 'addheader', 'port_handler.h', 'addheader', 'packet_handler.h');
-        %end
+    % Class to control custom Robot
+    %
+    % Example usage:
+    %
+    % Initialize the robot, it should move to home configuration
+    % (0°,0°,0°,0°)
+    % robot = MyRobot();
+    %
+    % Set movements speed of each individual joint, update interal joint
+    % speeds for later commands
+    % robot.set_speed([0.1,0.1,0.1,0.2],true);
+    %
+    % Set all motors to maximum torque
+    % robot.set_torque_limit([1,1,1,1]);
+    %
+    % Draw the current configuration of the robot
+    % robot.draw_robot();
+    %
+    % Move the robots joints
+    % robot.move_j(20,-90,0,50);
+    %
+    % Actuate the gripper. If the gripper is currently closed, it will open
+    % robot.actuate_gripper();
+    %
+    % Get the robots current joint positions
+    % current_joint_positions = robot.joint_pos
+    %
+    % Disable all motors. This is necessary to free up the com port. If you
+    % forgot to do this and clear the robot object, it will fail at
+    % reinitialization. To fix this unplug the robots USB cable and clear
+    % the workspace
+    % robot.disable_motors();
+    
+    
+    properties (Access = private)
+        lib_name = 'dxl_x64_c';                     % Library name for Win10
         
-        % Control table address
-        ADDR_MX_TORQUE_ENABLE       = 24;           % Control table address is different in Dynamixel model
-        ADDR_MX_GOAL_POSITION       = 30;
-        ADDR_MX_PRESENT_POSITION    = 36;
-        
-        % Protocol version
+        ADDR_MX_TORQUE_ENABLE       = 24;           % Control table address for enabling torque mode
+        ADDR_MX_GOAL_POSITION       = 30;           % Control table address for reading goal position
+        ADDR_MX_PRESENT_POSITION    = 36;           % Control table address for reading current position
         PROTOCOL_VERSION            = 1.0;          % See which protocol version is used in the Dynamixel
-
-        motor_ids = [2 1 10 0];
-        
-        BAUDRATE                    = 1000000;
+        BAUDRATE                    = 1000000;      % Baudrate for Motors
         DEVICENAME                  = 'COM3';       % Check which port is being used on your controller
         % ex) Windows: 'COM1'   Linux: '/dev/ttyUSB0' Mac: '/dev/tty.usbserial-*'
-        
         TORQUE_ENABLE               = 1;            % Value for enabling the torque
         TORQUE_DISABLE              = 0;            % Value for disabling the torque
         DXL_MOVING_STATUS_THRESHOLD = 10;           % Dynamixel moving status threshold
-        
-        ESC_CHARACTER               = 'e';          % Key for escaping loop
-        
         COMM_SUCCESS                = 0;            % Communication Success result value
         COMM_TX_FAIL                = -1001;        % Communication Tx Failed
         
-        index = 1;
-        port_num=0;
-        
-        % a, alpha, d, theta
-        dh = [0   	-90	0.0919 0;
-            0.096	0       0       0;
+        port_num=0;                                 % Portnumber gets automatically handled by Porthandler
+    end
+    properties (Access=public)
+        motor_ids = [0 1 2 3];                      % Motor IDs chronologically (see Dynamixel Wizard for more info)
+        gripper_motor_id = 4                        % ID of gripper motor
+        dh = [0   	-pi/2	0.0955 0;               % Denavit Hartenberg Parameters for Robot (a, alpha, d, theta)
+            0.116	0       0       0;
             0.096	0	0	0;
-            0.047  	0	0	0];
-        
-        dh_rad = [0   	-pi/2	0.0919 0;
-            0.096	0       0       0;
-            0.096	0	0	0;
-            0.047  	0	0	0];
-        
-        A = zeros(4,4);
-        
-        joint_angles = [0 0 0 0];
-        joint_pos = zeros(4,4);
-        
-        draw_robot_flag = 0;
-        rbt = rigidBodyTree;
-        
-        joint_limits = [-180 180; -160 0; -80 80; -80 80];
-        
-        ik = 0;
-        ik_weights = [0.25 0.25 0.25 1 1 1];
-        joint_offsets = [170 150+90 150 150];
-        joint_angle_error = [0 0 0 0];
+            0.064  	0	0	0];
+        forward_transform = zeros(4,4);             % Forward transformation Matrix        
+        joint_angles = [0 0 0 0];                   % Internal joint angles in degree
+        joint_pos = zeros(4,4);                     % Internal joint positions calculated with each move_j        
+        draw_robot_flag = 0;                        % Flag for drawing robot configuration
+        use_smooth_speed_flag = 0;                  % Flag for using smooth speed 
+        gripper_open_flag = 1;                      % Flag for gripper status
+        rbt = 0;                                    % RigidBodyTree        
+        joint_limits = [-130 130; -180 0; -100 100; -100 100]; %Joint Limits in degree        
+        ik = 0;                                     % Inverse Kinematics Object
+        ik_weights = [0.25 0.25 0.25 1 1 1];        % Weights for inverse kinematics 
+        joint_offsets = [171-5 150+90 150 150];     % Joint offsets to send to motor
+        joint_angle_error = [0 0 0 0];              % Internal joint angle error between read out of joint angles and input joint angles
+        init_status = 0;                            % Initialization succesfull flag
+        movement_history = [];                      % List to record movement history
+        motor_speed = 0;                            % List for motor speed
+        motor_torque = 0;                           % List for motor torque
+        pitch = 0;                                  % Pitch Angle for motor 3
    
     end
     methods
         function self = MyRobot()
+            %MyRobot Constructor for the MyRobot Class.
+            %   Initializes robot, setting initial motor speeds to 10%, motor
+            %   torque to 100% and sets initial joint angles to zero
+            %
+            %Inputs:
+            %   None
+            %Outputs:
+            %   self : MyRobot Object
+
             if ~libisloaded(self.lib_name)
-                [notfound, warnings] = loadlibrary(self.lib_name, 'dynamixel_sdk.h', 'addheader', 'port_handler.h', 'addheader', 'packet_handler.h');
+                [~, ~] = loadlibrary(self.lib_name, 'dynamixel_sdk.h', 'addheader', 'port_handler.h', 'addheader', 'packet_handler.h');
             end
             self.port_num = portHandler(self.DEVICENAME);
             packetHandler();
-            % Open port
             if (openPort(self.port_num))
                 fprintf('Succeeded to open the port!\n');
             else
                 fprintf('Failed to open the port!\n');
-                % Close port
                 closePort(self.port_num);
                 unloadlibrary(lib_name);
-
-
             end
             
-            % Set port baudrate
             if (setBaudRate(self.port_num, self.BAUDRATE))
                 fprintf('Succeeded to change the baudrate!\n');
             else
@@ -514,29 +826,100 @@ classdef MyRobot < handle
                 input('Press any key to terminate...\n');
                 return;
             end
-            fprintf("Initial Joint Angles: ")
-            for i=1:length(self.motor_ids)
-                self.joint_angles(i) = get_position(self, self.motor_ids(i));
-                fprintf('\n[ID:%03d] Pos:%02d', self.motor_ids(i), self.joint_angles(i));
 
-            end
-            self.set_speed([0.5,0.3,0.3,0.3]);
-            fprintf("\nSet initial speed to [05, 0.3, 0.3, 0.3]");
+            self.set_speed([0.1,0.1,0.1,0.1],true);
             self.set_torque_limit([1,1,1,1]);
-            fprintf("\nSet initial torque limit to [1 1 1 1]");
             self.move_j(0,0,0,0);
-            self.create_rbt();
+            self.init_status = 1;
             
         end
         
+        function open_gripper(self)
+            %open_gripper function for the MyRobot Class.
+            %   Opens the gripper
+            %
+            %Inputs:
+            %   None
+            %Outputs:
+            %   None
+            if ~self.gripper_open_flag
+                write2ByteTxRx(self.port_num, self.PROTOCOL_VERSION, self.gripper_motor_id, self.ADDR_MX_GOAL_POSITION, 0);
+                self.gripper_open_flag = 1;
+            end
+        end
+        
+        function close_gripper(self)
+            %close_gripper function for the MyRobot Class.
+            %   Closes the gripper
+            %
+            %Inputs:
+            %   None
+            %Outputs:
+            %   None
+            if self.gripper_open_flag
+                write2ByteTxRx(self.port_num, self.PROTOCOL_VERSION, self.gripper_motor_id, self.ADDR_MX_GOAL_POSITION, 1023);
+                self.gripper_open_flag = 0;
+            end
+        end
+        
+        function actuate_gripper(self)
+            %actuate_gripper function for the MyRobot Class.
+            %   opens gripper if closed, closes gripper if open
+            %
+            %Inputs:
+            %   None
+            %Outputs:
+            %   None
+            if self.gripper_open_flag
+                self.close_gripper();
+            else
+                self.open_gripper();
+            end
+        end
+        
+        function smooth_speed(self,joint_angles)
+            %smooth_speed function for the MyRobot Class.
+            %   Dynamically changes the speed of each joint to create
+            %   smoother motion. It assures all joint movements finish at
+            %   the same time
+            %
+            %Inputs:
+            %   joint_angles : a vector representing joint angles [deg]
+            %Outputs:
+            %   None
+            max_angle = max(abs(joint_angles));
+            speed_per_deg = max_angle/100;
+            if speed_per_deg~=0
+                new_speeds = abs(joint_angles/speed_per_deg)*0.01;
+                for i=1:length(self.motor_speed)
+                    if new_speeds(i)==0
+                        new_speeds(i)=self.motor_speed(i);
+                    else
+                        new_speeds(i)=new_speeds(i)*self.motor_speed(i);
+                    end
+                end
+                self.set_speed(new_speeds,false);
+            end
+        end
+        
         function create_rbt(self)
+            %create_rbt function for the MyRobot Class.
+            %   Creates a rigid body tree using the DH parameters of the
+            %   MyRobot Class and sets up inverse kinematics using the
+            %   matlab robotics toolbox
+            %
+            %Inputs:
+            %   None
+            %Outputs:
+            %   None
+            self.rbt = rigidBodyTree;
             bodies = cell(4,1);
             joints = cell(4,1);
             for i = 1:4
-                bodies{i} = rigidBody(['body' num2str(i)]);
+                bodies{i} = rigidBody(['link' num2str(i)]);
                 joints{i} = rigidBodyJoint(['jnt' num2str(i)],"revolute");
                 joints{i}.PositionLimits = [self.joint_limits(i,1)*pi/180,self.joint_limits(i,2)*pi/180];
-                setFixedTransform(joints{i},self.dh_rad(i,:),"dh");
+                setFixedTransform(joints{i},self.dh(i,:),"dh");
                 bodies{i}.Joint = joints{i};
                 if i == 1 % Add first body to base
                     addBody(self.rbt,bodies{i},"base")
@@ -547,7 +930,20 @@ classdef MyRobot < handle
             self.ik = inverseKinematics('RigidBodyTree',self.rbt);
         end
         
-        function set_speed(self, speeds)
+        function set_speed(self, speeds, overwrite_speeds)
+            %set_speed function for the MyRobot Class.
+            %   Sets individual motor speeds between 0% and 100%
+            %
+            %Inputs:
+            %   speeds : a vector representing motor speeds for each motor
+            %   ID between 0 and 1
+            %   overwrite_speeds: boolean, if true class internal motor
+            %   speeds are overwritten to motor speeds of function call
+            %Outputs:
+            %   None
+            if overwrite_speeds
+                self.motor_speed = speeds;
+            end
             for i=1:length(self.motor_ids)
                 if speeds(i) > 0 && speeds(i) <= 1
                     speed = speeds(i)*1023;
@@ -560,16 +956,25 @@ classdef MyRobot < handle
                         fprintf('\n%s', getRxPacketError(self.PROTOCOL_VERSION, dxl_error));
                     end
                 else
-                   fprint("\nMovement speed out of range, enter value between ]0,1]"); 
+                   fprintf("\nMovement speed out of range, enter value between ]0,1]"); 
                 end
             end
         end
         
-        function set_torque_limit(self, torque)
+        function set_torque_limit(self, torques)
+            %set_torque_limit function for the MyRobot Class.
+            %   Sets individual motor torques between 0% and 100%
+            %
+            %Inputs:
+            %   speeds : a vector representing motor torque for each motor
+            %   ID between 0 and 1
+            %Outputs:
+            %   None
+            
+            self.motor_torque = torques;
             for i=1:length(self.motor_ids)
-                if torque(i) > 0 && torque(i) <= 1
-                    tor = torque(i)*1023;
-                    write2ByteTxRx(self.port_num, self.PROTOCOL_VERSION, self.motor_ids(i), 34, tor);
+                if torques(i) > 0 && torques(i) <= 1
+                    write2ByteTxRx(self.port_num, self.PROTOCOL_VERSION, self.motor_ids(i), 34, torques(i)*1023);
                     dxl_comm_result = getLastTxRxResult(self.port_num, self.PROTOCOL_VERSION);
                     dxl_error = getLastRxPacketError(self.port_num, self.PROTOCOL_VERSION);
                     if dxl_comm_result ~= self.COMM_SUCCESS
@@ -578,14 +983,20 @@ classdef MyRobot < handle
                         fprintf('%s\n', getRxPacketError(self.PROTOCOL_VERSION, dxl_error));
                     end
                 else
-                   fprint("\nTorque limit out of range, enter value between ]0,1]"); 
+                   fprintf("\nTorque limit out of range, enter value between ]0,1]"); 
                 end
             end
                 end
         
-        function enable_motors(self)         
+        function enable_motors(self)
+            %enable_motors function for the MyRobot Class.
+            %   Enables all motors
+            %
+            %Inputs:
+            %   None
+            %Outputs:
+            %   None
             
-            % Enable Dynamixel Torque
             for i=1:length(self.motor_ids)
                 write1ByteTxRx(self.port_num, self.PROTOCOL_VERSION, self.motor_ids(i), self.ADDR_MX_TORQUE_ENABLE, self.TORQUE_ENABLE);
                 dxl_comm_result = getLastTxRxResult(self.port_num, self.PROTOCOL_VERSION);
@@ -602,6 +1013,14 @@ classdef MyRobot < handle
         end
         
         function deg_present_position = get_position(self, motor_id)
+            %get_position function for the MyRobot Class.
+            %   Reads current position of motor
+            %
+            %Inputs:
+            %   motor_id : integer representing the motors ID
+            %Outputs:
+            %   deg_present_position : value of current position [deg]
+            
             dxl_present_position = read2ByteTxRx(self.port_num, self.PROTOCOL_VERSION, motor_id, self.ADDR_MX_PRESENT_POSITION);
             deg_present_position = self.rot_to_deg(dxl_present_position);
             dxl_comm_result = getLastTxRxResult(self.port_num, self.PROTOCOL_VERSION);
@@ -614,10 +1033,15 @@ classdef MyRobot < handle
         end
         
         function disable_motors(self)
+            %disable_motors function for the MyRobot Class.
+            %   Disables all motors
+            %
+            %Inputs:
+            %   None
+            %Outputs:
+            %   None
             
             for i=1:length(self.motor_ids)
-                
-                % Disable Dynamixel Torque
                 write1ByteTxRx(self.port_num, self.PROTOCOL_VERSION, self.motor_ids(i), self.ADDR_MX_TORQUE_ENABLE, self.TORQUE_DISABLE);
                 dxl_comm_result = getLastTxRxResult(self.port_num, self.PROTOCOL_VERSION);
                 dxl_error = getLastRxPacketError(self.port_num, self.PROTOCOL_VERSION);
@@ -630,41 +1054,79 @@ classdef MyRobot < handle
                     
                 end
             end
-            % Close port
-            closePort(self.port_num);
-            
-            % Unload Library
+            closePort(self.port_num);          
             unloadlibrary(self.lib_name);
+            self.init_status = 0;
         end
         
         function deg = check_limits(self,deg, motor_id)
-            % see https://emanual.robotis.com/docs/en/dxl/ax/ax-12a/
+            %check_limits function for the MyRobot Class.
+            %   Checks if joint angle is within motor limits, depending on
+            %   the motor, see https://emanual.robotis.com/docs/en/dxl/ax/ax-12a/
+            %
+            %Inputs:
+            %   deg : value for joint angle [deg]
+            %   motor_id : int of motors ID
+            %Outputs:
+            %   deg : returns input value if checks pass [deg]
             if motor_id==self.motor_ids(1)
-                return
+                assert(abs(deg) <= 130, "Angle Limits for first Axis Reached, Min/Max: +-130°");
             elseif motor_id==self.motor_ids(2)
-                assert(deg <= 0 && deg >= -160, "Angle Limits for second Axis Reached, Min/Max: +-90°");
+                assert(deg <= 0 && deg >= -180, "Angle Limits for second Axis Reached, Min/Max: [0,-180]°");
             else
-                assert(abs(deg) <= 80, "Angle Limits Reached, Min/Max: +-90°");
+                assert(abs(deg) <= 100, "Angle Limits Reached, Min/Max: +-100°");
             end
 
         end
         
         function rot = deg_to_rot(self,deg)
+            %deg_to_rot function for the MyRobot Class.
+            %   Converts degree to units per rotation of motors
+            %
+            %Inputs:
+            %   deg : value [deg]
+            %Outputs:
+            %   rot : value in units per rotation of motor
             rot = deg*1/0.29;
         end
         
         function deg = rot_to_deg(self,rot)
+            %rot_to_deg function for the MyRobot Class.
+            %   Convers units per rotation of motors to degree
+            %
+            %Inputs:
+            %   rot : value in units per rotation of motor
+            %Outputs:
+            %   deg : value [deg]
             deg = rot*0.29;
         end
         
         function move_j(self,j1,j2,j3,j4)
+            %move_j function for the MyRobot Class.
+            %   Moves the robot arm to the desired joint angles, checks
+            %   joint limits, updates internal robot state and waits until
+            %   the joint angle error between desired and mesured joint
+            %   angle is below 2°
+            %
+            %Inputs:
+            %   j1 : value for joint one [deg]
+            %   j2 : value for joint two [deg]
+            %   j3 : value for joint three [deg]
+            %   j4 : value for joint four [deg]
+
+            %Outputs:
+            %   None
+            
             j1 = self.check_limits(j1, self.motor_ids(1));
             j2 = self.check_limits(j2, self.motor_ids(2));
             j3 = self.check_limits(j3, self.motor_ids(3));
             j4 = self.check_limits(j4, self.motor_ids(4));
 
-            self.joint_angles = [j1 j2 j3 0];
-            self.forward([j1 j2 j3 0]);
+            if self.use_smooth_speed_flag
+                self.smooth_speed([j1 j2 j3 j4]-self.joint_angles)
+            end
+            self.joint_angles = [j1 j2 j3 j4];
+            self.forward([j1 j2 j3 j4]);
             if self.draw_robot_flag
                 self.draw_robot()
             end
@@ -677,80 +1139,109 @@ classdef MyRobot < handle
             write2ByteTxRx(self.port_num, self.PROTOCOL_VERSION, self.motor_ids(1), self.ADDR_MX_GOAL_POSITION, self.deg_to_rot(j1));
             write2ByteTxRx(self.port_num, self.PROTOCOL_VERSION, self.motor_ids(2), self.ADDR_MX_GOAL_POSITION, self.deg_to_rot(j2));
             write2ByteTxRx(self.port_num, self.PROTOCOL_VERSION, self.motor_ids(3), self.ADDR_MX_GOAL_POSITION, self.deg_to_rot(j3));
-            pause(1)
+            write2ByteTxRx(self.port_num, self.PROTOCOL_VERSION, self.motor_ids(4), self.ADDR_MX_GOAL_POSITION, self.deg_to_rot(j4));
+            
+            while 1
+                self.read_joint_angles();
+                if self.joint_angle_error<2
+                    break;
+                end
+            end
         end
         
         
         function draw_robot(self)
-            self.draw_robot_flag = 1;
+            %draw_robot function for the MyRobot Class.
+            %   Draws robot coordinate frames using the rigid body tree
+            %
+            %Inputs:
+            %   None
+            %Outputs:
+            %   None
             
+            if self.rbt == 0
+                self.create_rbt();
+            end
+           
             config = homeConfiguration(self.rbt);
             for i=1:length(self.joint_angles)
                 config(i).JointPosition = self.joint_angles(i)*pi/180;
             end
-            figure(Name="RRRR Robot Model");
+            if self.draw_robot_flag == 0
+                figure(Name="RRRR Robot Model");
+            end
             show(self.rbt,config);
+            self.draw_robot_flag = 1;
         end
         
         function ee_cartesian_coords = forward(self, j_a)
-           
-            self.A = [cosd(j_a(1)) -sind(j_a(1))*cosd(self.dh(1,2))  sind(j_a(1))*sind(self.dh(1,2)) self.dh(1,1)*cosd(j_a(1));
-                sind(j_a(1)) cosd(j_a(1))*cosd(self.dh(1,2)) -cosd(j_a(1))*sind(self.dh(1,2)) self.dh(1,1)*sind(j_a(1));
-                0 sind(self.dh(1,2)) cosd(self.dh(1,2)) self.dh(1,3);
+           %forward function for the MyRobot Class.
+            %   Calculates forward transformation for all joint positions
+            %   and end effector coordinates
+            %
+            %Inputs:
+            %   j_a : a vector of four joint angles in [rad]
+            %Outputs:
+            %   ee_cartesian_coords : returns cartesian coordinates of end
+            %   effector in the base coordinate system in [m]
+            
+            self.forward_transform = [cosd(j_a(1)) -sind(j_a(1))*cos(self.dh(1,2))  sind(j_a(1))*sin(self.dh(1,2)) self.dh(1,1)*cos(j_a(1));
+                sind(j_a(1)) cosd(j_a(1))*cos(self.dh(1,2)) -cosd(j_a(1))*sin(self.dh(1,2)) self.dh(1,1)*sind(j_a(1));
+                0 sin(self.dh(1,2)) cos(self.dh(1,2)) self.dh(1,3);
                 0 0 0 1];
             
-            self.joint_pos(:,1) = self.A * [0 0 0 1]' ;
+            self.joint_pos(:,1) = self.forward_transform * [0 0 0 1]' ;
             self.joint_pos(:,1) = self.joint_pos(:,1) / self.joint_pos(4,1);
             
             for i=2:length(j_a)
-                self.A = self.A * [cosd(j_a(i)) -sind(j_a(i))*cosd(self.dh(i,2))  sind(j_a(i))*sind(self.dh(i,2)) self.dh(i,1)*cosd(j_a(i));
-                    sind(j_a(i)) cosd(j_a(i))*cosd(self.dh(i,2)) -cosd(j_a(i))*sind(self.dh(i,2)) self.dh(i,1)*sind(j_a(i));
-                    0 sind(self.dh(i,2)) cosd(self.dh(i,2)) self.dh(i,3);
+                self.forward_transform = self.forward_transform * [cosd(j_a(i)) -sind(j_a(i))*cos(self.dh(i,2))  sind(j_a(i))*sin(self.dh(i,2)) self.dh(i,1)*cosd(j_a(i));
+                    sind(j_a(i)) cosd(j_a(i))*cos(self.dh(i,2)) -cosd(j_a(i))*sin(self.dh(i,2)) self.dh(i,1)*sind(j_a(i));
+                    0 sin(self.dh(i,2)) cos(self.dh(i,2)) self.dh(i,3);
                     0 0 0 1];  
-                self.joint_pos(:,i) = self.A * [0 0 0 1]' ;
+                self.joint_pos(:,i) = self.forward_transform * [0 0 0 1]' ;
                 self.joint_pos(:,i) = self.joint_pos(:,i) / self.joint_pos(4,i);
             end
             
-            ee_cartesian_coords = self.A * [0 0 0 1]' ;
+            ee_cartesian_coords = self.forward_transform * [0 0 0 1]' ;
             ee_cartesian_coords = ee_cartesian_coords/ee_cartesian_coords(4);
         end
         
-        function j_a = inverse(self, x,y,z)
-%             self.joint_angles(1) = atan2(y,x);
-%             
-%             r = sqrt(x^2+y^2);
-%             d = sqrt(r^2+(z-0.091)^2);
-%             h = sqrt(0.096^2-(d/2)^2);
-%             self.joint_angles(2) = atan2(z-0.096,r) + atan2(h,d/2);
-%             self.joint_angles(3) = -180 -2 * atan2(d/2,h);
-%             self.joint_angles(4) = - self.joint_angles(2) - self.joint_angles(3);
+        function j_a = inverse(self, x,y,z,pitch)
+            %inverse function for the MyRobot Class.
+            %   Calculates inverse kinematics for the robot
+            %
+            %Inputs:
+            %   x : value for desired x position of the robot end effector
+            %   [m]
+            %   y : value for desired y position of the robot end effector
+            %   [m]
+            %   z : value for desired z position of the robot end effector
+            %   [m]
+            %   pitch : value for desired x position of the robot end
+            %   effector [deg]
 
-
-            j_a = zeros(4,1);            
-            initialguess = self.rbt.homeConfiguration;           
-            tform = [ 1 0 0 x;
-                0 0 1 y;
-                0 -1 0 z;
-                0 0 0 1];
+            %Outputs:
+            %   j_a : a vector containing joint angles [deg]
             
-            [configSoln,solnInfo] = self.ik('body4',tform,self.ik_weights,initialguess);
-            if strcmp(solnInfo.Status,'success')
-                for i=1:4
-                    j_a(i) = configSoln(i).JointPosition*180/pi;
-                end
-            elseif strcmp(solnInfo.Status,'best available')
-                fprintf("Status: '%s', using Angles:\n", solnInfo.Status);
-                for i=1:4
-                    j_a(i) = configSoln(i).JointPosition*180/pi;
-                    fprintf("%f°  ",configSoln(i).JointPosition*180/pi);
-                end
-            else
-                fprintf("Unsuccesfull IK, with status: '%s'", solnInfo.Status);
-            end
-               
+            j1 = atan2(y,x);
+            j3 = acos( ((sqrt(x^2+y^2)-self.dh(4,1)*cos(pitch))^2 + (self.dh(1,3)-z)^2 - self.dh(2,1)^2 - self.dh(3,1)^2) / (2*self.dh(2,1)*self.dh(3,1)) );
+            assert(isreal(j3),"Configuration Impossible");
+            j2 = -atan2(z-self.dh(1,3)-self.dh(4,1)*sin(pitch),sqrt(x^2+y^2)-self.dh(4,1)*cos(pitch)) - atan2(self.dh(3,1)+self.dh(2,1)*cos(j3),self.dh(2,1)*sin(j3)) + (pi/2-j3);
+            j4 = pitch - j2 - j3;
+            
+            j_a = rad2deg([j1 j2 j3 j4]);
+            self.pitch = pitch;
+            assert(isreal(j_a),"Configuration Impossible");
         end
         
         function j_a = read_joint_angles(self)
+            %read_joint_angles function for the MyRobot Class.
+            %   reads joint angles of all motor IDs
+            %
+            %Inputs:
+            %   None
+            %Outputs:
+            %   j_a : a vector containing joint angles [deg]
             j_a = zeros(4,1);
             for i=1:length(self.motor_ids)
                 dxl_present_position = read2ByteTxRx(self.port_num, self.PROTOCOL_VERSION, self.motor_ids(i), 36);
@@ -768,14 +1259,101 @@ classdef MyRobot < handle
         end
         
         function ee_pos = read_ee_position(self)
+           %read_ee_position function for the MyRobot Class.
+            %   Reads motors joint angles and calculates the end effector
+            %   position from that
+            %
+            %Inputs:
+            %   None
+            %Outputs:
+            %   ee_pos : a vector containing the end effector position [m]
            j_a = self.read_joint_angles();
            ee_pos = self.forward(j_a);
         end
         
-        function move_c (self,x,y,z)
-           j_a = self.inverse(x,y,z);
+        function move_c (self,x,y,z,pitch)
+            %move_c function for the MyRobot Class.
+            %   Moves robot in cartesian space using inverse kinematics
+            %
+            %Inputs:
+            %   x : value for desired x position of the robot end effector
+            %   [m]
+            %   y : value for desired y position of the robot end effector
+            %   [m]
+            %   z : value for desired z position of the robot end effector
+            %   [m]
+            %   pitch : value for desired x position of the robot end
+            %   effector [deg]
+
+            %Outputs:
+            %   None
+           j_a = self.inverse(x,y,z,deg2rad(pitch));
            self.move_j(j_a(1),j_a(2),j_a(3),j_a(4));
         end
+        
+        function record_configuration(self)
+            %record_configuration function for the MyRobot Class.
+            %   Records current robot configuration (joint angles, speed,
+            %   torque, gripper state)
+            %
+            %Inputs:
+            %   None
+            %Outputs:
+            %   None
+            j_a = self.joint_angles;
+            torque = self.motor_torque(1);
+            speed = self.motor_speed(1);
+            if isempty(self.movement_history)
+                self.movement_history = [j_a(1), j_a(2),j_a(3),j_a(4), speed, torque,self.gripper_open_flag];
+            else
+                self.movement_history = [self.movement_history; j_a(1), j_a(2),j_a(3),j_a(4), speed, torque,self.gripper_open_flag];
+            end
+            fprintf("\nRecorded Speed: %f, Torque: %f, \nJoint Positions: %f, %f, %f, %f,\nGripper open: %f",speed,torque,j_a(1),j_a(2),j_a(3),j_a(4), self.gripper_open_flag);
+        end
+        
+        function delete_last_recorded_configuration(self)
+            %delete_last_recorded_configuration function for the MyRobot Class.
+            %   Deletes last recorded robot configuration
+            %
+            %Inputs:
+            %   None
+            %Outputs:
+            %   None
+            length_history = size(self.movement_history);
+            if isempty(self.movement_history)
+                fprintf("No last history position"); 
+            elseif length_history(1)==1
+                self.movement_history = [];
+            else
+               self.movement_history(end,:) = [];
+            end
+        end
+        
+        function play_configuration_history(self)
+            %play_configuration_history function for the MyRobot Class.
+            %   Plays recorded configuration history
+            %
+            %Inputs:
+            %   None
+            %Outputs:
+            %   None
+            if ~isempty(self.movement_history)
+               length_history = size(self.movement_history);
+               for i=1:length_history(1)
+                  speed = self.movement_history(i,5);
+                  torque = self.movement_history(i,6);
+                  self.set_speed([speed,speed, speed, speed],true);
+                  self.set_torque_limit([torque, torque, torque, torque]);
+                  self.move_j(self.movement_history(i,1),self.movement_history(i,2),self.movement_history(i,3),self.movement_history(i,4));
+                  pause(1);
+                  if self.gripper_open_flag ~= self.movement_history(i,7)
+                      self.actuate_gripper();
+                      pause(3);
+                  end
+               end
+            end
+        end
+
     end
 end
 

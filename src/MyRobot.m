@@ -1,32 +1,48 @@
 classdef MyRobot < handle
     % Class to control custom Robot
+    %
     % Example usage:
+    %
+    % Initialize the robot, it should move to home configuration
+    % (0°,0°,0°,0°)
     % robot = MyRobot();
-    % robot.set_speed([0.1,0.1,0.1,0.1],true);
+    %
+    % Set movements speed of each individual joint, update interal joint
+    % speeds for later commands
+    % robot.set_speed([0.1,0.1,0.1,0.2],true);
+    %
+    % Set all motors to maximum torque
     % robot.set_torque_limit([1,1,1,1]);
+    %
+    % Draw the current configuration of the robot
     % robot.draw_robot();
+    %
+    % Move the robots joints
     % robot.move_j(20,-90,0,50);
+    %
+    % Actuate the gripper. If the gripper is currently closed, it will open
+    % robot.actuate_gripper();
+    %
+    % Get the robots current joint positions
+    % current_joint_positions = robot.joint_pos
+    %
+    % Disable all motors. This is necessary to free up the com port. If you
+    % forgot to do this and clear the robot object, it will fail at
+    % reinitialization. To fix this unplug the robots USB cable and clear
+    % the workspace
     % robot.disable_motors();
     
-    % If library fails to load, unplug the robot from the computer and
-    % clear the workspace/ restart the GUI
     
     properties (Access = private)
         lib_name = 'dxl_x64_c';                     % Library name for Win10
         
-        % Control table address
         ADDR_MX_TORQUE_ENABLE       = 24;           % Control table address for enabling torque mode
         ADDR_MX_GOAL_POSITION       = 30;           % Control table address for reading goal position
         ADDR_MX_PRESENT_POSITION    = 36;           % Control table address for reading current position
-        
-        % Protocol version
         PROTOCOL_VERSION            = 1.0;          % See which protocol version is used in the Dynamixel
-
-        
         BAUDRATE                    = 1000000;      % Baudrate for Motors
         DEVICENAME                  = 'COM3';       % Check which port is being used on your controller
         % ex) Windows: 'COM1'   Linux: '/dev/ttyUSB0' Mac: '/dev/tty.usbserial-*'
-        
         TORQUE_ENABLE               = 1;            % Value for enabling the torque
         TORQUE_DISABLE              = 0;            % Value for disabling the torque
         DXL_MOVING_STATUS_THRESHOLD = 10;           % Dynamixel moving status threshold
@@ -42,8 +58,6 @@ classdef MyRobot < handle
             0.116	0       0       0;
             0.096	0	0	0;
             0.064  	0	0	0];
-        
-       
         forward_transform = zeros(4,4);             % Forward transformation Matrix        
         joint_angles = [0 0 0 0];                   % Internal joint angles in degree
         joint_pos = zeros(4,4);                     % Internal joint positions calculated with each move_j        
@@ -58,14 +72,22 @@ classdef MyRobot < handle
         joint_angle_error = [0 0 0 0];              % Internal joint angle error between read out of joint angles and input joint angles
         init_status = 0;                            % Initialization succesfull flag
         movement_history = [];                      % List to record movement history
-        motor_speed = 0;                            % List for motor speed, e.g. [0.2,0.1,0.1,1]
-        motor_torque = 0;                           % List for motor torque, e.g. [1,1,0.5,0.5]
+        motor_speed = 0;                            % List for motor speed
+        motor_torque = 0;                           % List for motor torque
         pitch = 0;                                  % Pitch Angle for motor 3
    
     end
     methods
         function self = MyRobot()
-            % Initialize robot, setting initial motor speeds to 10%, motor
+            %MyRobot Constructor for the MyRobot Class.
+            %   Initializes robot, setting initial motor speeds to 10%, motor
+            %   torque to 100% and sets initial joint angles to zero
+            %
+            %Inputs:
+            %   None
+            %Outputs:
+            %   self : MyRobot Object
+
             if ~libisloaded(self.lib_name)
                 [~, ~] = loadlibrary(self.lib_name, 'dynamixel_sdk.h', 'addheader', 'port_handler.h', 'addheader', 'packet_handler.h');
             end
@@ -96,6 +118,13 @@ classdef MyRobot < handle
         end
         
         function open_gripper(self)
+            %open_gripper function for the MyRobot Class.
+            %   Opens the gripper
+            %
+            %Inputs:
+            %   None
+            %Outputs:
+            %   None
             if ~self.gripper_open_flag
                 write2ByteTxRx(self.port_num, self.PROTOCOL_VERSION, self.gripper_motor_id, self.ADDR_MX_GOAL_POSITION, 0);
                 self.gripper_open_flag = 1;
@@ -103,6 +132,13 @@ classdef MyRobot < handle
         end
         
         function close_gripper(self)
+            %close_gripper function for the MyRobot Class.
+            %   Closes the gripper
+            %
+            %Inputs:
+            %   None
+            %Outputs:
+            %   None
             if self.gripper_open_flag
                 write2ByteTxRx(self.port_num, self.PROTOCOL_VERSION, self.gripper_motor_id, self.ADDR_MX_GOAL_POSITION, 1023);
                 self.gripper_open_flag = 0;
@@ -110,6 +146,13 @@ classdef MyRobot < handle
         end
         
         function actuate_gripper(self)
+            %actuate_gripper function for the MyRobot Class.
+            %   opens gripper if closed, closes gripper if open
+            %
+            %Inputs:
+            %   None
+            %Outputs:
+            %   None
             if self.gripper_open_flag
                 self.close_gripper();
             else
@@ -118,6 +161,15 @@ classdef MyRobot < handle
         end
         
         function smooth_speed(self,joint_angles)
+            %smooth_speed function for the MyRobot Class.
+            %   Dynamically changes the speed of each joint to create
+            %   smoother motion. It assures all joint movements finish at
+            %   the same time
+            %
+            %Inputs:
+            %   joint_angles : a vector representing joint angles [deg]
+            %Outputs:
+            %   None
             max_angle = max(abs(joint_angles));
             speed_per_deg = max_angle/100;
             if speed_per_deg~=0
@@ -134,6 +186,15 @@ classdef MyRobot < handle
         end
         
         function create_rbt(self)
+            %create_rbt function for the MyRobot Class.
+            %   Creates a rigid body tree using the DH parameters of the
+            %   MyRobot Class and sets up inverse kinematics using the
+            %   matlab robotics toolbox
+            %
+            %Inputs:
+            %   None
+            %Outputs:
+            %   None
             self.rbt = rigidBodyTree;
             bodies = cell(4,1);
             joints = cell(4,1);
@@ -153,6 +214,16 @@ classdef MyRobot < handle
         end
         
         function set_speed(self, speeds, overwrite_speeds)
+            %set_speed function for the MyRobot Class.
+            %   Sets individual motor speeds between 0% and 100%
+            %
+            %Inputs:
+            %   speeds : a vector representing motor speeds for each motor
+            %   ID between 0 and 1
+            %   overwrite_speeds: boolean, if true class internal motor
+            %   speeds are overwritten to motor speeds of function call
+            %Outputs:
+            %   None
             if overwrite_speeds
                 self.motor_speed = speeds;
             end
@@ -174,6 +245,15 @@ classdef MyRobot < handle
         end
         
         function set_torque_limit(self, torques)
+            %set_torque_limit function for the MyRobot Class.
+            %   Sets individual motor torques between 0% and 100%
+            %
+            %Inputs:
+            %   speeds : a vector representing motor torque for each motor
+            %   ID between 0 and 1
+            %Outputs:
+            %   None
+            
             self.motor_torque = torques;
             for i=1:length(self.motor_ids)
                 if torques(i) > 0 && torques(i) <= 1
@@ -191,9 +271,15 @@ classdef MyRobot < handle
             end
                 end
         
-        function enable_motors(self)         
+        function enable_motors(self)
+            %enable_motors function for the MyRobot Class.
+            %   Enables all motors
+            %
+            %Inputs:
+            %   None
+            %Outputs:
+            %   None
             
-            % Enable Dynamixel Torque
             for i=1:length(self.motor_ids)
                 write1ByteTxRx(self.port_num, self.PROTOCOL_VERSION, self.motor_ids(i), self.ADDR_MX_TORQUE_ENABLE, self.TORQUE_ENABLE);
                 dxl_comm_result = getLastTxRxResult(self.port_num, self.PROTOCOL_VERSION);
@@ -210,6 +296,14 @@ classdef MyRobot < handle
         end
         
         function deg_present_position = get_position(self, motor_id)
+            %get_position function for the MyRobot Class.
+            %   Reads current position of motor
+            %
+            %Inputs:
+            %   motor_id : integer representing the motors ID
+            %Outputs:
+            %   deg_present_position : value of current position [deg]
+            
             dxl_present_position = read2ByteTxRx(self.port_num, self.PROTOCOL_VERSION, motor_id, self.ADDR_MX_PRESENT_POSITION);
             deg_present_position = self.rot_to_deg(dxl_present_position);
             dxl_comm_result = getLastTxRxResult(self.port_num, self.PROTOCOL_VERSION);
@@ -222,10 +316,15 @@ classdef MyRobot < handle
         end
         
         function disable_motors(self)
+            %disable_motors function for the MyRobot Class.
+            %   Disables all motors
+            %
+            %Inputs:
+            %   None
+            %Outputs:
+            %   None
             
             for i=1:length(self.motor_ids)
-                
-                % Disable Dynamixel Torque
                 write1ByteTxRx(self.port_num, self.PROTOCOL_VERSION, self.motor_ids(i), self.ADDR_MX_TORQUE_ENABLE, self.TORQUE_DISABLE);
                 dxl_comm_result = getLastTxRxResult(self.port_num, self.PROTOCOL_VERSION);
                 dxl_error = getLastRxPacketError(self.port_num, self.PROTOCOL_VERSION);
@@ -238,16 +337,21 @@ classdef MyRobot < handle
                     
                 end
             end
-            % Close port
-            closePort(self.port_num);
-            
-            % Unload Library
+            closePort(self.port_num);          
             unloadlibrary(self.lib_name);
             self.init_status = 0;
         end
         
         function deg = check_limits(self,deg, motor_id)
-            % see https://emanual.robotis.com/docs/en/dxl/ax/ax-12a/
+            %check_limits function for the MyRobot Class.
+            %   Checks if joint angle is within motor limits, depending on
+            %   the motor, see https://emanual.robotis.com/docs/en/dxl/ax/ax-12a/
+            %
+            %Inputs:
+            %   deg : value for joint angle [deg]
+            %   motor_id : int of motors ID
+            %Outputs:
+            %   deg : returns input value if checks pass [deg]
             if motor_id==self.motor_ids(1)
                 assert(abs(deg) <= 130, "Angle Limits for first Axis Reached, Min/Max: +-130°");
             elseif motor_id==self.motor_ids(2)
@@ -259,14 +363,43 @@ classdef MyRobot < handle
         end
         
         function rot = deg_to_rot(self,deg)
+            %deg_to_rot function for the MyRobot Class.
+            %   Converts degree to units per rotation of motors
+            %
+            %Inputs:
+            %   deg : value [deg]
+            %Outputs:
+            %   rot : value in units per rotation of motor
             rot = deg*1/0.29;
         end
         
         function deg = rot_to_deg(self,rot)
+            %rot_to_deg function for the MyRobot Class.
+            %   Convers units per rotation of motors to degree
+            %
+            %Inputs:
+            %   rot : value in units per rotation of motor
+            %Outputs:
+            %   deg : value [deg]
             deg = rot*0.29;
         end
         
         function move_j(self,j1,j2,j3,j4)
+            %move_j function for the MyRobot Class.
+            %   Moves the robot arm to the desired joint angles, checks
+            %   joint limits, updates internal robot state and waits until
+            %   the joint angle error between desired and mesured joint
+            %   angle is below 2°
+            %
+            %Inputs:
+            %   j1 : value for joint one [deg]
+            %   j2 : value for joint two [deg]
+            %   j3 : value for joint three [deg]
+            %   j4 : value for joint four [deg]
+
+            %Outputs:
+            %   None
+            
             j1 = self.check_limits(j1, self.motor_ids(1));
             j2 = self.check_limits(j2, self.motor_ids(2));
             j3 = self.check_limits(j3, self.motor_ids(3));
@@ -301,11 +434,18 @@ classdef MyRobot < handle
         
         
         function draw_robot(self)
+            %draw_robot function for the MyRobot Class.
+            %   Draws robot coordinate frames using the rigid body tree
+            %
+            %Inputs:
+            %   None
+            %Outputs:
+            %   None
+            
             if self.rbt == 0
                 self.create_rbt();
             end
-            
-            
+           
             config = homeConfiguration(self.rbt);
             for i=1:length(self.joint_angles)
                 config(i).JointPosition = self.joint_angles(i)*pi/180;
@@ -318,7 +458,16 @@ classdef MyRobot < handle
         end
         
         function ee_cartesian_coords = forward(self, j_a)
-           
+           %forward function for the MyRobot Class.
+            %   Calculates forward transformation for all joint positions
+            %   and end effector coordinates
+            %
+            %Inputs:
+            %   j_a : a vector of four joint angles in [rad]
+            %Outputs:
+            %   ee_cartesian_coords : returns cartesian coordinates of end
+            %   effector in the base coordinate system in [m]
+            
             self.forward_transform = [cosd(j_a(1)) -sind(j_a(1))*cos(self.dh(1,2))  sind(j_a(1))*sin(self.dh(1,2)) self.dh(1,1)*cos(j_a(1));
                 sind(j_a(1)) cosd(j_a(1))*cos(self.dh(1,2)) -cosd(j_a(1))*sin(self.dh(1,2)) self.dh(1,1)*sind(j_a(1));
                 0 sin(self.dh(1,2)) cos(self.dh(1,2)) self.dh(1,3);
@@ -341,64 +490,22 @@ classdef MyRobot < handle
         end
         
         function j_a = inverse(self, x,y,z,pitch)
-%             self.joint_angles(1) = atan2(y,x);
-%             
-%             r = sqrt(x^2+y^2);
-%             d = sqrt(r^2+(z-0.091)^2);
-%             h = sqrt(0.096^2-(d/2)^2);
-%             self.joint_angles(2) = atan2(z-0.096,r) + atan2(h,d/2);
-%             self.joint_angles(3) = -180 -2 * atan2(d/2,h);
-%             self.joint_angles(4) = - self.joint_angles(2) - self.joint_angles(3);
+            %inverse function for the MyRobot Class.
+            %   Calculates inverse kinematics for the robot
+            %
+            %Inputs:
+            %   x : value for desired x position of the robot end effector
+            %   [m]
+            %   y : value for desired y position of the robot end effector
+            %   [m]
+            %   z : value for desired z position of the robot end effector
+            %   [m]
+            %   pitch : value for desired x position of the robot end
+            %   effector [deg]
 
-%             self.joint_angles(1) = atan2(y,x);
-%             self.joint_angles(2) = acos((x^2+y^2-self.dh(1,1)^2-self.dh(2,1)^2)/(2*self.dh(1,1)*self.dh(2,1)));
-%             self.joint_angles(3) = acos(((sqrt(x^2+y^2)-self.dh(4,1))^2+(self.dh(1,3)-z)^2)/...
-%                 (self.dh(2,1)^2+self.dh(3,1)^2 + 2*self.dh(2,1)*self.dh(3,1)));
-%             self.joint_angles(4) = - self.joint_angles(2) - self.joint_angles(3);
-        
-        
-%             a1 = 0;
-%             a2 = 0.096;
-%             a3 = 0.096;
-%             a4 = 0.047;
-%             d1 = 0.0919;
-%             pitch = 0;
-%             
-% 
-%             j1 = atan2(y,x);
-%             j3 = pi + acos((a2^2/2 + a3^2/2 - (a4 - (x^2 + y^2)^(1/2))^2/2 - (d1 - z)^2/2)/(a2*a3));
-%             %j3 = pi - acos((a2^2/2 + a3^2/2 - (a4 - (x^2 + y^2)^(1/2))^2/2 - (d1 - z)^2/2)/(a2*a3));
-%             
-%             j2 = (pi-j3)/2 + acos(sqrt((x^2+y^2)/(z^2+x^2+y^2)));
-%             j4 = pitch - j2 - j3;
-
-% 
-%             if self.rbt == 0
-%                 self.create_rbt();
-%             end
-%             
-%             j_a = zeros(4,1);            
-%             initialguess = self.rbt.homeConfiguration;           
-%             tform = [ 1 0 0 x;
-%                 0 0 1 y;
-%                 0 -1 0 z;
-%                 0 0 0 1];
-%             
-%             [configSoln,solnInfo] = self.ik('link4',tform,self.ik_weights,initialguess);
-%             if strcmp(solnInfo.Status,'success')
-%                 for i=1:4
-%                     j_a(i) = configSoln(i).JointPosition*180/pi;
-%                 end
-%             elseif strcmp(solnInfo.Status,'best available')
-%                 fprintf("Status: '%s', using Angles:\n", solnInfo.Status);
-%                 for i=1:4
-%                     j_a(i) = configSoln(i).JointPosition*180/pi;
-%                     fprintf("%f°  ",configSoln(i).JointPosition*180/pi);
-%                 end
-%             else
-%                 fprintf("Unsuccesfull IK, with status: '%s'", solnInfo.Status);
-%             end
-        
+            %Outputs:
+            %   j_a : a vector containing joint angles [deg]
+            
             j1 = atan2(y,x);
             j3 = acos( ((sqrt(x^2+y^2)-self.dh(4,1)*cos(pitch))^2 + (self.dh(1,3)-z)^2 - self.dh(2,1)^2 - self.dh(3,1)^2) / (2*self.dh(2,1)*self.dh(3,1)) );
             assert(isreal(j3),"Configuration Impossible");
@@ -411,6 +518,13 @@ classdef MyRobot < handle
         end
         
         function j_a = read_joint_angles(self)
+            %read_joint_angles function for the MyRobot Class.
+            %   reads joint angles of all motor IDs
+            %
+            %Inputs:
+            %   None
+            %Outputs:
+            %   j_a : a vector containing joint angles [deg]
             j_a = zeros(4,1);
             for i=1:length(self.motor_ids)
                 dxl_present_position = read2ByteTxRx(self.port_num, self.PROTOCOL_VERSION, self.motor_ids(i), 36);
@@ -428,16 +542,47 @@ classdef MyRobot < handle
         end
         
         function ee_pos = read_ee_position(self)
+           %read_ee_position function for the MyRobot Class.
+            %   Reads motors joint angles and calculates the end effector
+            %   position from that
+            %
+            %Inputs:
+            %   None
+            %Outputs:
+            %   ee_pos : a vector containing the end effector position [m]
            j_a = self.read_joint_angles();
            ee_pos = self.forward(j_a);
         end
         
         function move_c (self,x,y,z,pitch)
+            %move_c function for the MyRobot Class.
+            %   Moves robot in cartesian space using inverse kinematics
+            %
+            %Inputs:
+            %   x : value for desired x position of the robot end effector
+            %   [m]
+            %   y : value for desired y position of the robot end effector
+            %   [m]
+            %   z : value for desired z position of the robot end effector
+            %   [m]
+            %   pitch : value for desired x position of the robot end
+            %   effector [deg]
+
+            %Outputs:
+            %   None
            j_a = self.inverse(x,y,z,deg2rad(pitch));
            self.move_j(j_a(1),j_a(2),j_a(3),j_a(4));
         end
         
         function record_configuration(self)
+            %record_configuration function for the MyRobot Class.
+            %   Records current robot configuration (joint angles, speed,
+            %   torque, gripper state)
+            %
+            %Inputs:
+            %   None
+            %Outputs:
+            %   None
             j_a = self.joint_angles;
             torque = self.motor_torque(1);
             speed = self.motor_speed(1);
@@ -450,6 +595,13 @@ classdef MyRobot < handle
         end
         
         function delete_last_recorded_configuration(self)
+            %delete_last_recorded_configuration function for the MyRobot Class.
+            %   Deletes last recorded robot configuration
+            %
+            %Inputs:
+            %   None
+            %Outputs:
+            %   None
             length_history = size(self.movement_history);
             if isempty(self.movement_history)
                 fprintf("No last history position"); 
@@ -461,6 +613,13 @@ classdef MyRobot < handle
         end
         
         function play_configuration_history(self)
+            %play_configuration_history function for the MyRobot Class.
+            %   Plays recorded configuration history
+            %
+            %Inputs:
+            %   None
+            %Outputs:
+            %   None
             if ~isempty(self.movement_history)
                length_history = size(self.movement_history);
                for i=1:length_history(1)
