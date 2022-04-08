@@ -1,9 +1,9 @@
  | 
 :-------------------------:|:-------------------------:
 <div style="width:100px ; height:60px">
-![](https://github.com/MonsisGit/MyRobot/blob/master/doc/images/novo.png?raw=true "Employee Data title")
+![](https://github.com/MonsisGit/MyRobot/blob/master/doc/images/novo.png)
 <div>  |  <div style="width:100px ; height:60px">
-![](https://github.com/MonsisGit/MyRobot/blob/master/doc/images/dtu.png?raw=true "Employee Data title")
+![](https://github.com/MonsisGit/MyRobot/blob/master/doc/images/dtu.png)
 <div>
 
 
