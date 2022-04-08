@@ -1,4 +1,4 @@
-![DTU](https://github.com/MonsisGit/MyRobot/blob/master/doc/images/dtu.png)![novo](https://github.com/MonsisGit/MyRobot/blob/master/doc/images/novo.png)
+![](https://github.com/MonsisGit/MyRobot/blob/master/doc/images/dtu.png = 100x50)![](https://github.com/MonsisGit/MyRobot/blob/master/doc/images/novo.png = 100 x 50)
 
 # MyRobot
 This robot was developed by me during an internship at Novo Nordisk in collaboration with DTU
