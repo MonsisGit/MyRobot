@@ -1,5 +1,3 @@
- | 
-:-------------------------:|:-------------------------:
 ![](https://github.com/MonsisGit/MyRobot/blob/master/doc/images/novo.png)|![](https://github.com/MonsisGit/MyRobot/blob/master/doc/images/dtu.png)
 
 
