@@ -1,5 +1,11 @@
+# MyRobot Repo
 This robot was developed in collaboration with DTU and Novo Nordisk
 
-[GUI](https://github.com/MonsisGit/MyRobot/blob/master/src/MyRobot_Studio.mlapp)
-[Parts list](https://github.com/MonsisGit/MyRobot/blob/master/CAD/parts_list.md)
-[CAD](https://github.com/MonsisGit/MyRobot/blob/master/CAD/Robot_Arm.stp)
+1. [Theory](https://github.com/MonsisGit/MyRobot/blob/master/doc/theory.md)
+2. [MyRobot](https://github.com/MonsisGit/MyRobot/blob/master/doc/MyRobot.md)
+3. [DirectServo](https://github.com/MonsisGit/MyRobot/blob/master/doc/DirectServo.md)
+4. [GUI](https://github.com/MonsisGit/MyRobot/blob/master/doc/GUI.md)
+
+5. [CAD](https://github.com/MonsisGit/MyRobot/blob/master/CAD/Robot_Arm.stp)
+6. [Parts list](https://github.com/MonsisGit/MyRobot/blob/master/CAD/parts_list.md)
+7. [STL Files](https://github.com/MonsisGit/MyRobot/blob/master/CAD/stl/)
