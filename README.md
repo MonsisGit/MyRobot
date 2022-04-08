@@ -1,4 +1,11 @@
-![](https://github.com/MonsisGit/MyRobot/blob/master/doc/images/dtu.png = 100x50)![](https://github.com/MonsisGit/MyRobot/blob/master/doc/images/novo.png = 100 x 50)
+ | 
+:-------------------------:|:-------------------------:
+<div style="width:100px ; height:60px">
+![](https://github.com/MonsisGit/MyRobot/blob/master/doc/images/novo.png?raw=true "Employee Data title")
+<div>  |  <div style="width:100px ; height:60px">
+![](https://github.com/MonsisGit/MyRobot/blob/master/doc/images/dtu.png?raw=true "Employee Data title")
+<div>
+
 
 # MyRobot
 This robot was developed by me during an internship at Novo Nordisk in collaboration with DTU
