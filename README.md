@@ -1,6 +1,6 @@
 <p float="left">
-  <img src="https://github.com/MonsisGit/MyRobot/blob/master/doc/images/novo.png" width="200" />
-  <img src="https://github.com/MonsisGit/MyRobot/blob/master/doc/images/dtu.png" width="50" /> 
+  <img src="https://github.com/MonsisGit/MyRobot/blob/master/doc/images/novo.png" width="200" height="100" />
+  <img src="https://github.com/MonsisGit/MyRobot/blob/master/doc/images/dtu.png" width="80" height="100" /> 
 </p>
 
 # MyRobot
