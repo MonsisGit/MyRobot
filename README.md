@@ -1,7 +1,6 @@
-![](https://github.com/MonsisGit/MyRobot/blob/master/doc/images/novo.png) ![](https://github.com/MonsisGit/MyRobot/blob/master/doc/images/dtu.png)
 <p float="left">
   <img src="https://github.com/MonsisGit/MyRobot/blob/master/doc/images/novo.png" width="200" />
-  <img src="https://github.com/MonsisGit/MyRobot/blob/master/doc/images/dtu.png" width="200" /> 
+  <img src="https://github.com/MonsisGit/MyRobot/blob/master/doc/images/dtu.png" width="50" /> 
 </p>
 
 # MyRobot
