@@ -9,9 +9,10 @@ This robot was developed by me during an internship at Novo Nordisk in collabora
 ## Links
 
 1. [Theory](https://github.com/MonsisGit/MyRobot/blob/master/doc/theory.md)
-2. Further Code Usage 
+2. Code Usage 
+    - [Basic MyRobot Class usage](https://github.com/MonsisGit/MyRobot/blob/master/README.md#Basic-Usage)
     - [DirectServo](https://github.com/MonsisGit/MyRobot/blob/master/doc/DirectServo.md)
-    - [GUI](https://github.com/MonsisGit/MyRobot/blob/master/doc/GUI.md)
+    - [Controlling the arm via GUI](https://github.com/MonsisGit/MyRobot/blob/master/README.md#Using-the-GUI)
 
 3. [CAD](https://github.com/MonsisGit/MyRobot/blob/master/CAD/) includes:
     - [CAD Files (STP)](https://github.com/MonsisGit/MyRobot/blob/master/CAD/Robot_Arm_stp.zip)
