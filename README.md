@@ -9,18 +9,22 @@ This robot was developed by me during an internship at Novo Nordisk in collabora
 ## Links
 
 1. [Theory](https://github.com/MonsisGit/MyRobot/blob/master/doc/theory.md)
-2. Code Usage 
-    - [MyRobot](https://github.com/MonsisGit/MyRobot/blob/master/doc/MyRobot.md)
+2. Further Code Usage 
     - [DirectServo](https://github.com/MonsisGit/MyRobot/blob/master/doc/DirectServo.md)
     - [GUI](https://github.com/MonsisGit/MyRobot/blob/master/doc/GUI.md)
 
-3. CAD
-    - [Complete CAD File (STP)](https://github.com/MonsisGit/MyRobot/blob/master/CAD/Robot_Arm.stp)
-    - [Complete CAD File (CATIA)](https://github.com/MonsisGit/MyRobot/blob/master/CAD/Robot_Arm.stp)
-    - [Parts list](https://github.com/MonsisGit/MyRobot/blob/master/CAD/parts_list.md)
-    - [STL Files](https://github.com/MonsisGit/MyRobot/blob/master/CAD/stl/)
+3. [CAD](https://github.com/MonsisGit/MyRobot/blob/master/CAD/) includes:
+    - [CAD Files (STP)](https://github.com/MonsisGit/MyRobot/blob/master/CAD/Robot_Arm_stp.zip)
+    - [CAD Files (CATIA V5)](https://github.com/MonsisGit/MyRobot/blob/master/CAD/CATIA_V5.zip)
+    - [Parts list (xlsx)](https://github.com/MonsisGit/MyRobot/blob/master/CAD/parts_list.xlsx)
+    - [Parts list (pdf)](https://github.com/MonsisGit/MyRobot/blob/master/CAD/parts_list.pdf)
+    - [STL Files for 3D-Printing](https://github.com/MonsisGit/MyRobot/blob/master/CAD/stls_to_print.zip)
 
 ## Basic Usage
+See documentaion of MyRobot Class
+```
+doc MyRobot
+```
 
 Initialize the robot, it should move to home configuration (0°,0°,0°,0°)
 ```
