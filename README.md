@@ -10,9 +10,9 @@ This robot was developed by me during an internship at Novo Nordisk in collabora
 
 1. [Theory](https://github.com/MonsisGit/MyRobot/blob/master/doc/theory.md)
 2. Code Usage 
-    - [Basic MyRobot Class usage](https://github.com/MonsisGit/MyRobot/blob/master/README.md#Basic-Usage)
+    - [Basic MyRobot class usage (MATLAB)](https://github.com/MonsisGit/MyRobot/blob/master/README.md#Basic-Usage)
     - [DirectServo](https://github.com/MonsisGit/MyRobot/blob/master/doc/DirectServo.md)
-    - [Controlling the arm via GUI](https://github.com/MonsisGit/MyRobot/blob/master/README.md#Using-the-GUI)
+    - [Controlling the arm via GUI (MATLAB)](https://github.com/MonsisGit/MyRobot/blob/master/README.md#Using-the-GUI)
 
 3. [CAD](https://github.com/MonsisGit/MyRobot/blob/master/CAD/) includes:
     - [CAD Files (STP)](https://github.com/MonsisGit/MyRobot/blob/master/CAD/Robot_Arm_stp.zip)
@@ -68,7 +68,8 @@ Disable all motors. This is necessary to free up the com port. If you forgot to 
 robot.disable_motors();
 ```
 
-##Using the GUI
+## Using the GUI
+
 Insert video
 
 
