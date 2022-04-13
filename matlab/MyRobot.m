@@ -87,33 +87,36 @@ classdef MyRobot < handle
             %   None
             %Outputs:
             %   self : MyRobot Object
+            try
+                if ~libisloaded(self.lib_name)
+                    [~, ~] = loadlibrary(self.lib_name, 'dynamixel_sdk.h', 'addheader', 'port_handler.h', 'addheader', 'packet_handler.h');
+                end
+                self.port_num = portHandler(self.DEVICENAME);
+                packetHandler();
+                if (openPort(self.port_num))
+                    fprintf('Succeeded to open the port!\n');
+                else
+                    fprintf('Failed to open the port!\nReconnect Robot!\n');
+                    closePort(self.port_num);
+                    unloadlibrary(lib_name);
+                end
 
-            if ~libisloaded(self.lib_name)
-                [~, ~] = loadlibrary(self.lib_name, 'dynamixel_sdk.h', 'addheader', 'port_handler.h', 'addheader', 'packet_handler.h');
-            end
-            self.port_num = portHandler(self.DEVICENAME);
-            packetHandler();
-            if (openPort(self.port_num))
-                fprintf('Succeeded to open the port!\n');
-            else
-                fprintf('Failed to open the port!\n');
-                closePort(self.port_num);
-                unloadlibrary(lib_name);
-            end
-            
-            if (setBaudRate(self.port_num, self.BAUDRATE))
-                fprintf('Succeeded to change the baudrate!\n');
-            else
-                unloadlibrary(self.lib_name);
-                fprintf('Failed to change the baudrate!\n');
-                input('Press any key to terminate...\n');
-                return;
-            end
+                if (setBaudRate(self.port_num, self.BAUDRATE))
+                    fprintf('Succeeded to change the baudrate!\n');
+                else
+                    unloadlibrary(self.lib_name);
+                    fprintf('Failed to change the baudrate!\nReconnect Robot!\n');
+                    return;
+                end
 
-            self.set_speed([0.1,0.1,0.1,0.1],true);
-            self.set_torque_limit([1,1,1,1]);
-            self.move_j(0,0,0,0);
-            self.init_status = 1;
+                self.set_speed([0.1,0.1,0.1,0.1],true);
+                self.set_torque_limit([1,1,1,1]);
+                self.move_j(0,0,0,0);
+                self.init_status = 1;
+            catch ME
+                disp(ME.message);
+                self.init_status = 0;
+            end
             
         end
         

@@ -10,7 +10,8 @@ This robot was developed by me during an internship at Novo Nordisk in collabora
 
 1. [Theory](https://github.com/MonsisGit/MyRobot/blob/master/doc/theory.md)
 2. Code Usage 
-    - [Basic MyRobot class usage (MATLAB)](https://github.com/MonsisGit/MyRobot/blob/master/README.md#Basic-Usage)
+    - [Basic MyRobot class usage (MATLAB)](https://github.com/MonsisGit/MyRobot/blob/master/README.md#Basic-Usage-of-MyRobot)
+    - [Visual Servoing Demo (MATLAB)](https://github.com/MonsisGit/MyRobot/blob/master/README.md#Visual-Servoing)
     - [DirectServo](https://github.com/MonsisGit/MyRobot/blob/master/doc/DirectServo.md)
     - [Controlling the arm via GUI (MATLAB)](https://github.com/MonsisGit/MyRobot/blob/master/README.md#Using-the-GUI)
 
@@ -22,7 +23,7 @@ This robot was developed by me during an internship at Novo Nordisk in collabora
     - [STL Files for 3D-Printing](https://github.com/MonsisGit/MyRobot/blob/master/CAD/stls_to_print.zip)
     - [Drawing](https://github.com/MonsisGit/MyRobot/blob/master/CAD/overview_drawing.pdf)
 
-## Basic Usage
+## Basic Usage of MyRobot
 See documentaion of MyRobot Class
 ```
 doc MyRobot
@@ -67,6 +68,10 @@ Disable all motors. This is necessary to free up the com port. If you forgot to 
 ```
 robot.disable_motors();
 ```
+##Visual Servoing
+
+To run, the deep learning toolbox and the MATLAB support package for USB webcams are needed
+
 
 ## Using the GUI
 
