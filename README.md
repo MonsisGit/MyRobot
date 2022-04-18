@@ -75,6 +75,7 @@ To run, the deep learning toolbox and the MATLAB support package for USB webcams
 
 ## Using the GUI
 
-Insert video
+Start the MyRobot_Studio.mlapp file in Matlab
 
+<img src="https://media.giphy.com/media/SqHr7QHvoKA8Fz5jO6/giphy.gif" width="40" height="40" />
 

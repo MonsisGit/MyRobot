@@ -57,7 +57,7 @@ classdef MyRobot < handle
         dh = [0   	-pi/2	0.0955 0;               % Denavit Hartenberg Parameters for Robot (a, alpha, d, theta)
             0.116	0       0       0;
             0.096	0	0	0;
-            0.064  	0	0	0];
+            0.09611  	0	0	0];
         forward_transform = zeros(4,4);             % Forward transformation Matrix        
         joint_angles = [0 0 0 0];                   % Internal joint angles in degree
         joint_pos = zeros(4,4);                     % Internal joint positions calculated with each move_j        
@@ -412,7 +412,7 @@ classdef MyRobot < handle
                 self.smooth_speed([j1 j2 j3 j4]-self.joint_angles)
             end
             self.joint_angles = [j1 j2 j3 j4];
-            self.forward([j1 j2 j3 j4]);
+            self.forward(self.joint_angles);
             if self.draw_robot_flag
                 self.draw_robot()
             end
@@ -487,9 +487,7 @@ classdef MyRobot < handle
                 self.joint_pos(:,i) = self.forward_transform * [0 0 0 1]' ;
                 self.joint_pos(:,i) = self.joint_pos(:,i) / self.joint_pos(4,i);
             end
-            
-            ee_cartesian_coords = self.forward_transform * [0 0 0 1]' ;
-            ee_cartesian_coords = ee_cartesian_coords/ee_cartesian_coords(4);
+            ee_cartesian_coords = self.joint_pos(:,4);
         end
         
         function j_a = inverse(self, x,y,z,pitch)
@@ -516,7 +514,7 @@ classdef MyRobot < handle
             j4 = pitch - j2 - j3;
             
             j_a = rad2deg([j1 j2 j3 j4]);
-            self.pitch = pitch;
+            self.pitch = rad2deg(pitch);
             assert(isreal(j_a),"Configuration Impossible");
         end
         
