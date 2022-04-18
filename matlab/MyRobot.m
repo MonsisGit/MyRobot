@@ -94,7 +94,7 @@ classdef MyRobot < handle
                 self.port_num = portHandler(self.DEVICENAME);
                 packetHandler();
                 if (openPort(self.port_num))
-                    fprintf('Succeeded to open the port!\n');
+                    fprintf('\nSucceeded to open the port!\n');
                 else
                     fprintf('Failed to open the port!\nReconnect Robot!\n');
                     closePort(self.port_num);
