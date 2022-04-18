@@ -1,5 +1,4 @@
 <p float="left">
-  <img src="https://github.com/MonsisGit/MyRobot/blob/master/doc/images/novo.png" width="150" height="150" />
   <img src="https://github.com/MonsisGit/MyRobot/blob/master/doc/images/dtu.png" width="60" height="80" /> 
 </p>
 
