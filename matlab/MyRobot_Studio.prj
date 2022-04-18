@@ -1,38 +1,56 @@
 <deployment-project plugin="plugin.apptool" plugin-version="1.0">
-  <configuration file="C:\Users\simon\Nextcloud2\Master\Robot_Project\scripts\matlab\MyRobot_Studio.prj" location="C:\Users\simon\Nextcloud2\Master\Robot_Project\scripts\matlab" name="MyRobot_Studio" target="target.mlapps" target-name="Package App">
+  <configuration build-checksum="1369928076" file="C:\Users\simon\Nextcloud2\Master\Robot_Project\scripts\matlab\MyRobot_Studio.prj" location="C:\Users\simon\Nextcloud2\Master\Robot_Project\scripts\matlab" name="MyRobot_Studio" target="target.mlapps" target-name="Package App">
     <param.appname>MyRobot_Studio</param.appname>
     <param.authnamewatermark>Simon Goldhofer</param.authnamewatermark>
-    <param.email />
+    <param.email>simon.goldhofer@tutanota.com</param.email>
     <param.company />
     <param.icon />
     <param.icons />
     <param.summary>Control MyRobot</param.summary>
-    <param.description />
-    <param.screenshot>C:\Users\simon\AppData\Local\Temp\tp25bfee2b_a48e_4fa4_9e77_a77c72a5a6c4.png</param.screenshot>
+    <param.description>Control MyRobot Class using a GUI</param.description>
+    <param.screenshot>C:\Users\simon\AppData\Local\Temp\tp3e5c7782_4b06_4efb_a2c7_dd8c8996374f.png</param.screenshot>
     <param.version>1.0</param.version>
-    <param.products.name />
-    <param.products.id />
-    <param.products.version />
+    <param.products.name>
+      <item>MATLAB</item>
+      <item>Robotics System Toolbox</item>
+    </param.products.name>
+    <param.products.id>
+      <item>1</item>
+      <item>142</item>
+    </param.products.id>
+    <param.products.version>
+      <item>9.10</item>
+      <item>3.3</item>
+    </param.products.version>
     <param.platforms />
     <param.output>${PROJECT_ROOT}</param.output>
     <param.guid>e8416d18-ffcd-40e3-a58c-361e17cbd3da</param.guid>
     <unset>
-      <param.email />
       <param.company />
       <param.icon />
       <param.icons />
-      <param.description />
       <param.version />
-      <param.products.name />
-      <param.products.id />
-      <param.products.version />
       <param.platforms />
       <param.output />
     </unset>
     <fileset.main>
       <file>${PROJECT_ROOT}\MyRobot_Studio.mlapp</file>
     </fileset.main>
-    <fileset.depfun />
+    <fileset.depfun>
+      <file>C:\Users\simon\Nextcloud2\Master\Robot_Project\scripts\DynamixelSDK-3.7.31\matlab\m_basic_function\packet_handler\getLastRxPacketError.m</file>
+      <file>C:\Users\simon\Nextcloud2\Master\Robot_Project\scripts\DynamixelSDK-3.7.31\matlab\m_basic_function\packet_handler\getLastTxRxResult.m</file>
+      <file>C:\Users\simon\Nextcloud2\Master\Robot_Project\scripts\DynamixelSDK-3.7.31\matlab\m_basic_function\packet_handler\getRxPacketError.m</file>
+      <file>C:\Users\simon\Nextcloud2\Master\Robot_Project\scripts\DynamixelSDK-3.7.31\matlab\m_basic_function\packet_handler\getTxRxResult.m</file>
+      <file>C:\Users\simon\Nextcloud2\Master\Robot_Project\scripts\DynamixelSDK-3.7.31\matlab\m_basic_function\packet_handler\packetHandler.m</file>
+      <file>C:\Users\simon\Nextcloud2\Master\Robot_Project\scripts\DynamixelSDK-3.7.31\matlab\m_basic_function\packet_handler\read2ByteTxRx.m</file>
+      <file>C:\Users\simon\Nextcloud2\Master\Robot_Project\scripts\DynamixelSDK-3.7.31\matlab\m_basic_function\packet_handler\write1ByteTxRx.m</file>
+      <file>C:\Users\simon\Nextcloud2\Master\Robot_Project\scripts\DynamixelSDK-3.7.31\matlab\m_basic_function\packet_handler\write2ByteTxRx.m</file>
+      <file>C:\Users\simon\Nextcloud2\Master\Robot_Project\scripts\DynamixelSDK-3.7.31\matlab\m_basic_function\port_handler\closePort.m</file>
+      <file>C:\Users\simon\Nextcloud2\Master\Robot_Project\scripts\DynamixelSDK-3.7.31\matlab\m_basic_function\port_handler\openPort.m</file>
+      <file>C:\Users\simon\Nextcloud2\Master\Robot_Project\scripts\DynamixelSDK-3.7.31\matlab\m_basic_function\port_handler\portHandler.m</file>
+      <file>C:\Users\simon\Nextcloud2\Master\Robot_Project\scripts\DynamixelSDK-3.7.31\matlab\m_basic_function\port_handler\setBaudRate.m</file>
+      <file>${PROJECT_ROOT}\MyRobot.m</file>
+    </fileset.depfun>
     <fileset.resources />
     <fileset.package />
     <build-deliverables>
