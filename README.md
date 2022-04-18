@@ -41,42 +41,45 @@ Dynamixel succesfully disconnected
 Succeeded to open the port!
 Succeeded to change the baudrate!
 ```
-Set movements speed of each individual joint, update interal joint speeds for later commands
+Set movements speed of each individual joint, update interal joint speeds for later commands.
 ```
 robot.set_speed([0.1,0.1,0.1,0.2],true);
 ```
 
-Set all motors to maximum torque
+Set all motors to maximum torque.
 ```
 robot.set_torque_limit([1,1,1,1]);
 ```
 
-Draw the current configuration of the robot
+Draw the current configuration of the robot. This get updated with every new movement command issued.
 ```
 robot.draw_robot();
 ```
 
-Move the robots joints
+Move the robots joints.
 ```
 robot.move_j(20,-90,0,50);
 ```
-Move using inverse kinematics. Input are cartesian x,y,z position of the End-Effector in meters. The last input argument is the pitch angle, which refers to the angle in degrees between the end-effector and the horizontal. The second command lies outside the robots workspace, the Error *Configuration Impossible* gets thrown.
+Move using inverse kinematics. Input are cartesian x, y, z position of the end-effector in meters. The last input argument is the pitch angle, which refers to the angle in degrees between the end-effector and the horizontal. The second command lies outside the robots workspace, the Error *Configuration Impossible* gets thrown. The robot does not move.
 ```
-rob.move_c(0.05,0.12,0.25,0)
-rob.move_c(0.05,0.12,0.35,0)
+rob.move_c(0.05,0.12,0.25,0);
+rob.move_c(0.05,0.12,0.35,0);
 
 Error using MyRobot/inverse (line 512)
 Configuration Impossible
+
+Error in MyRobot/move_c (line 574)
+           j_a = self.inverse(x,y,z,deg2rad(pitch));
 ```
 
-Actuate the gripper. If the gripper is currently closed, it will open
+Actuate the gripper. If the gripper is currently closed, it will open.
 ```
 robot.actuate_gripper();
-robot.close_gripper()
-robot.open_gripper()
+robot.close_gripper();
+robot.open_gripper();
 ```
 
-Get the robots current joint positions
+Get the robots current joint positions.
 ```
 current_joint_positions = robot.joint_pos
 ```
@@ -88,7 +91,7 @@ ans =
     0.0955    0.0955    0.0955    0.0955
     1.0000    1.0000    1.0000    1.0000
 ```
-Disable all motors. This is necessary to free up the com port. If you forgot to do this and clear the robot object, it will fail at reinitialization. To fix this unplug the robots USB cable and clear the workspace
+Disable all motors. This is necessary to free up the com port. If you forgot to do this and clear the robot object, it will fail at reinitialization. To fix this unplug the robots USB cable and clear the workspace.
 ```
 robot.disable_motors();
 ```
