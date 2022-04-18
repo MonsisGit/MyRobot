@@ -60,20 +60,29 @@ Move the robots joints
 ```
 robot.move_j(20,-90,0,50);
 ```
+Move using inverse kinematics. Input are cartesian x,y,z position of the End-Effector in meters. The last input argument is the pitch angle, which refers to the angle in degrees between the end-effector and the horizontal. The second command lies outside the robots workspace, the Error *Configuration Impossible* gets thrown.
+```
+rob.move_c(0.05,0.12,0.25,0)
+rob.move_c(0.05,0.12,0.35,0)
+
+Error using MyRobot/inverse (line 512)
+Configuration Impossible
+```
 
 Actuate the gripper. If the gripper is currently closed, it will open
 ```
 robot.actuate_gripper();
+robot.close_gripper()
+robot.open_gripper()
 ```
 
 Get the robots current joint positions
 ```
 current_joint_positions = robot.joint_pos
 ```
-This returns joint positions 1-4 (columns) and x,y,z (rows) in meters. For reference see the [drawing](https://github.com/MonsisGit/MyRobot/blob/master/CAD/overview_drawing.pdf)
+This returns joint positions 1-4 (columns) and x,y,z (rows) in meters. For reference see the [drawing](https://github.com/MonsisGit/MyRobot/blob/master/CAD/overview_drawing.pdf). Here, the initial position is shown:
 ```
 ans =
-
          0    0.1160    0.2120    0.3081
          0         0         0         0
     0.0955    0.0955    0.0955    0.0955

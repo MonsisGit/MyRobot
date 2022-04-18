@@ -1,6 +1,5 @@
 <p float="left">
-  <img src="https://github.com/MonsisGit/MyRobot/blob/master/doc/images/novo.png" width="160" height="120" />
-  <img src="https://github.com/MonsisGit/MyRobot/blob/master/doc/images/dtu.png" width="70" height="70" /> 
+  <img src="https://github.com/MonsisGit/MyRobot/blob/master/doc/images/dtu.png" width="60" height="80" /> 
 </p>
 
 # MyRobot
@@ -33,7 +32,15 @@ Initialize the robot, it should move to home configuration (0°,0°,0°,0°)
 ```
 robot = MyRobot();
 ```
-
+This should return
+```
+Dynamixel succesfully disconnected
+Dynamixel succesfully disconnected
+Dynamixel succesfully disconnected
+Dynamixel succesfully disconnected
+Succeeded to open the port!
+Succeeded to change the baudrate!
+```
 Set movements speed of each individual joint, update interal joint speeds for later commands
 ```
 robot.set_speed([0.1,0.1,0.1,0.2],true);
@@ -53,29 +60,49 @@ Move the robots joints
 ```
 robot.move_j(20,-90,0,50);
 ```
+Move using inverse kinematics. Input are cartesian x,y,z position of the End-Effector in meters. The last inp
+rob.move_c(0.05,0.12,0.25,0)
+
 
 Actuate the gripper. If the gripper is currently closed, it will open
 ```
 robot.actuate_gripper();
+robot.close_gripper()
+robot.open_gripper()
 ```
 
 Get the robots current joint positions
 ```
 current_joint_positions = robot.joint_pos
 ```
-
+This returns joint positions 1-4 (columns) and x,y,z (rows) in meters. For reference see the [drawing](https://github.com/MonsisGit/MyRobot/blob/master/CAD/overview_drawing.pdf). Here, the initial position is shown:
+```
+ans =
+         0    0.1160    0.2120    0.3081
+         0         0         0         0
+    0.0955    0.0955    0.0955    0.0955
+    1.0000    1.0000    1.0000    1.0000
+```
 Disable all motors. This is necessary to free up the com port. If you forgot to do this and clear the robot object, it will fail at reinitialization. To fix this unplug the robots USB cable and clear the workspace
 ```
 robot.disable_motors();
 ```
+This should return
+```
+Dynamixel succesfully disconnected
+Dynamixel succesfully disconnected
+Dynamixel succesfully disconnected
+Dynamixel succesfully disconnected
+```
+
 ## Visual Servoing
 
 To run, the deep learning toolbox and the MATLAB support package for USB webcams are needed
-
+TODO
 
 ## Using the GUI
 
-Install [APP](https://github.com/MonsisGit/MyRobot/blob/master/matlab/MyRobot_Studio.mlappinstall) or run [FIle](https://github.com/MonsisGit/MyRobot/blob/master/matlab/MyRobot_Studio.mlapp)
+Install [app](https://github.com/MonsisGit/MyRobot/blob/master/matlab/MyRobot_Studio.mlappinstall) or run [file](https://github.com/MonsisGit/MyRobot/blob/master/matlab/MyRobot_Studio.mlapp)
 
 <img src="https://media.giphy.com/media/SqHr7QHvoKA8Fz5jO6/giphy.gif" width="500" height="300" />
 
