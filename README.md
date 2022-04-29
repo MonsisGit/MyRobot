@@ -8,7 +8,7 @@ This robot was developed by me during an internship at Novo Nordisk in collabora
 ## Links
 
 0. [Setup](https://github.com/MonsisGit/MyRobot/blob/master/README.md#Setup)
-1. [ReTheory](https://github.com/MonsisGit/MyRobot/blob/master/doc/Programming_of_robotic_arm_with_computer_vision_based_control.pdf)
+1. [Theory](https://github.com/MonsisGit/MyRobot/blob/master/doc/Programming_of_robotic_arm_with_computer_vision_based_control.pdf)
 2. Code Usage 
     - [Basic MyRobot class usage (MATLAB)](https://github.com/MonsisGit/MyRobot/blob/master/README.md#Basic-Usage-of-MyRobot)
     - [Visual Servoing Demo (MATLAB)](https://github.com/MonsisGit/MyRobot/blob/master/README.md#Visual-Servoing)
