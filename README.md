@@ -28,7 +28,7 @@ This robot was developed by me during an internship at Novo Nordisk in collabora
 2. Follow the [setup instructions](https://emanual.robotis.com/docs/en/software/dynamixel/dynamixel_sdk/library_setup/matlab_windows/) for the Dynamixel SDK in matlab. The repo includes [Dynamixel SDK-3.7.31](https://github.com/MonsisGit/MyRobot/tree/master/DynamixelSDK-3.7.31), change paths accordingly.
 3. Optional: Install the [Dynamixel Wizard](https://emanual.robotis.com/docs/en/software/dynamixel/dynamixel_wizard2/) and [configure](https://docs.poppy-project.org/en/assembly-guides/poppy-humanoid/addressing_dynamixel.html) your motors from there (e.g. Motor IDs).
 4. Optional: For [DirectServo](https://github.com/MonsisGit/MyRobot/blob/master/doc/DirectServo.md) setup robot with a USB-camera. Run ```webcamlist()``` to find the new camera.
-
+5. [Pictures](https://github.com/MonsisGit/MyRobot/tree/master/doc/images) of the arm may assist with mechanical setup.
 ## Basic Usage of MyRobot
 See documentaion of MyRobot Class
 ```
