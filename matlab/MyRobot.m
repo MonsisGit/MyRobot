@@ -470,15 +470,15 @@ classdef MyRobot < handle
             %Outputs:
             %   ee_cartesian_coords : returns cartesian coordinates of end
             %   effector in the base coordinate system in [m]
-            
+
             self.forward_transform = [cosd(j_a(1)) -sind(j_a(1))*cos(self.dh(1,2))  sind(j_a(1))*sin(self.dh(1,2)) self.dh(1,1)*cos(j_a(1));
                 sind(j_a(1)) cosd(j_a(1))*cos(self.dh(1,2)) -cosd(j_a(1))*sin(self.dh(1,2)) self.dh(1,1)*sind(j_a(1));
                 0 sin(self.dh(1,2)) cos(self.dh(1,2)) self.dh(1,3);
                 0 0 0 1];
-            
+
             self.joint_pos(:,1) = self.forward_transform * [0 0 0 1]' ;
             self.joint_pos(:,1) = self.joint_pos(:,1) / self.joint_pos(4,1);
-            
+
             for i=2:length(j_a)
                 self.forward_transform = self.forward_transform * [cosd(j_a(i)) -sind(j_a(i))*cos(self.dh(i,2))  sind(j_a(i))*sin(self.dh(i,2)) self.dh(i,1)*cosd(j_a(i));
                     sind(j_a(i)) cosd(j_a(i))*cos(self.dh(i,2)) -cosd(j_a(i))*sin(self.dh(i,2)) self.dh(i,1)*sind(j_a(i));

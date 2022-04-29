@@ -7,6 +7,7 @@ This robot was developed by me during an internship at Novo Nordisk in collabora
 
 ## Links
 
+0. [Setup](https://github.com/MonsisGit/MyRobot/blob/master/README.md#Setup)
 1. [Theory](https://github.com/MonsisGit/MyRobot/blob/master/doc/theory.md)
 2. Code Usage 
     - [Basic MyRobot class usage (MATLAB)](https://github.com/MonsisGit/MyRobot/blob/master/README.md#Basic-Usage-of-MyRobot)
@@ -22,6 +23,11 @@ This robot was developed by me during an internship at Novo Nordisk in collabora
     - [STL Files for 3D-Printing](https://github.com/MonsisGit/MyRobot/blob/master/CAD/stls_to_print.zip)
     - [Drawing](https://github.com/MonsisGit/MyRobot/blob/master/CAD/overview_drawing.pdf)
 
+## Setup
+1. ```git pull https://github.com/MonsisGit/MyRobot.git```
+2. Follow the [setup instructions](https://emanual.robotis.com/docs/en/software/dynamixel/dynamixel_sdk/library_setup/matlab_windows/) for the Dynamixel SDK in matlab
+3. Optional: Install the [Dynamixel Wizard](https://emanual.robotis.com/docs/en/software/dynamixel/dynamixel_wizard2/) and configure your motors from there (e.g. Motor IDs).
+4. Optional: For [DirectServo](https://github.com/MonsisGit/MyRobot/blob/master/doc/DirectServo.md) setup robot with a USB-camera. Run ```webcamlist()``` to find the new camera.
 ## Basic Usage of MyRobot
 See documentaion of MyRobot Class
 ```
