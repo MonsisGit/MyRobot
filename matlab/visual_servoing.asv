@@ -26,7 +26,7 @@ assert(robot.is_robot_connected(),"Robot not connected properly");
 robot.move_j(0,-90,0,0);
 cw = 0;
 pause(2);
-cd Ne
+
 while true
     try
         videoFrame = snapshot(cam);

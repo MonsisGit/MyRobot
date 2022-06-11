@@ -20,6 +20,10 @@ classdef MyRobot < handle
     % Move the robots joints
     % robot.move_j(20,-90,0,50);
     %
+    % Move the robot using cartesian coordinates in meters (pitch in
+    % degree)
+    % rob.move_c(0,-0.080,0.3,-10)
+    %
     % Actuate the gripper. If the gripper is currently closed, it will open
     % robot.actuate_gripper();
     %
@@ -111,13 +115,17 @@ classdef MyRobot < handle
 
                 self.set_speed([0.1,0.1,0.1,0.1],true);
                 self.set_torque_limit([1,1,1,1]);
-                self.move_j(0,0,0,0);
+                self.move_j(0,-90,0,0);
                 self.init_status = 1;
             catch ME
                 disp(ME.message);
                 self.init_status = 0;
             end
             
+        end
+        
+        function robot_connecttion = is_robot_connected(self)
+            robot_connecttion = openPort(self.port_num);
         end
         
         function open_gripper(self)
@@ -355,12 +363,10 @@ classdef MyRobot < handle
             %   motor_id : int of motors ID
             %Outputs:
             %   deg : returns input value if checks pass [deg]
-            if motor_id==self.motor_ids(1)
-                assert(abs(deg) <= 130, "Angle Limits for first Axis Reached, Min/Max: +-130°");
-            elseif motor_id==self.motor_ids(2)
-                assert(deg <= 0 && deg >= -180, "Angle Limits for second Axis Reached, Min/Max: [0,-180]°");
+            if ismember(motor_id,self.motor_ids)
+                assert(deg >= self.joint_limits(motor_id+1,1) && deg <= self.joint_limits(motor_id+1,2),"Angle Limits for motor %s Axis Reached: %s",num2str(motor_id),num2str(self.joint_limits(2,:)));
             else
-                assert(abs(deg) <= 100, "Angle Limits Reached, Min/Max: +-100°");
+                fprintf("Motor ID: %s not in known motor IDs: [%s]",num2str(motor_id), num2str(self.motor_ids));
             end
 
         end
@@ -509,6 +515,10 @@ classdef MyRobot < handle
             
             j1 = atan2(y,x);
             j3 = acos( ((sqrt(x^2+y^2)-self.dh(4,1)*cos(pitch))^2 + (self.dh(1,3)-z)^2 - self.dh(2,1)^2 - self.dh(3,1)^2) / (2*self.dh(2,1)*self.dh(3,1)) );
+            if ~isreal(j3) || ~(rad2deg(j3)>=self.joint_limits(3,1) && rad2deg(j3)<=self.joint_limits(3,2))
+                fprintf("Choosing elbow down solution for j3: %s",num2str(j3));
+                j3 = atan2(j3,-sqrt(1-j3^2));
+            end
             assert(isreal(j3),"Configuration Impossible");
             j2 = -atan2(z-self.dh(1,3)-self.dh(4,1)*sin(pitch),sqrt(x^2+y^2)-self.dh(4,1)*cos(pitch)) - atan2(self.dh(3,1)+self.dh(2,1)*cos(j3),self.dh(2,1)*sin(j3)) + (pi/2-j3);
             j4 = pitch - j2 - j3;
