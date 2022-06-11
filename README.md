@@ -12,7 +12,6 @@ This robot was developed by me during an internship at Novo Nordisk in collabora
 2. Code Usage 
     - [Basic MyRobot class usage (MATLAB)](https://github.com/MonsisGit/MyRobot/blob/master/README.md#Basic-Usage-of-MyRobot)
     - [Visual Servoing Demo (MATLAB)](https://github.com/MonsisGit/MyRobot/blob/master/README.md#Visual-Servoing)
-    - [DirectServo](https://github.com/MonsisGit/MyRobot/blob/master/doc/DirectServo.md)
     - [Controlling the arm via GUI (MATLAB)](https://github.com/MonsisGit/MyRobot/blob/master/README.md#Using-the-GUI)
 
 3. [CAD](https://github.com/MonsisGit/MyRobot/blob/master/CAD/) includes:
@@ -112,7 +111,8 @@ Dynamixel succesfully disconnected
 
 ## Visual Servoing
 
-To run, the deep learning toolbox and the MATLAB support package for USB webcams are needed
+To run, the deep learning toolbox and the MATLAB support package for USB webcams are needed.
+
 Run 
 ```
 webcamlist()
