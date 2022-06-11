@@ -113,7 +113,23 @@ Dynamixel succesfully disconnected
 ## Visual Servoing
 
 To run, the deep learning toolbox and the MATLAB support package for USB webcams are needed
-TODO
+Run 
+```
+webcamlist()
+
+ans =
+
+  4×1 cell array
+
+    {'GENERAL WEBCAM'         }
+    {'HP TrueVision HD Camera'}
+    {'C270 HD WEBCAM'         }
+    {'DroidCam Source 3'      }
+```
+to define correct camera
+```
+cam = webcam(3);
+```
 
 ## Using the GUI
 
