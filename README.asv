@@ -130,7 +130,6 @@ to define correct camera
 ```
 cam = webcam(3);
 ```
-<img src="https://media.giphy.com/media/OC3qdhHCzLoz7IeaYO/giphy.gif" width="500" height="300" />
 
 ## Using the GUI
 
