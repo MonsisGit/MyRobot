@@ -131,6 +131,8 @@ to define correct camera
 cam = webcam(3);
 ```
 Demo:
+
+
 <img src="https://media.giphy.com/media/OC3qdhHCzLoz7IeaYO/giphy.gif" width="500" height="300" />
 
 ## Using the GUI
@@ -138,6 +140,8 @@ Demo:
 Install [app](https://github.com/MonsisGit/MyRobot/blob/master/matlab/MyRobot_Studio.mlappinstall) or run [file](https://github.com/MonsisGit/MyRobot/blob/master/matlab/MyRobot_Studio.mlapp)
 ![GUI](https://github.com/MonsisGit/MyRobot/blob/master/doc/images/gui.png)
 Demo:
+
+
 <img src="https://media.giphy.com/media/SqHr7QHvoKA8Fz5jO6/giphy.gif" width="500" height="300" />
 
 ## Contact
